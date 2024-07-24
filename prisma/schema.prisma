@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int             @id @default(autoincrement())
+  twitch            Twitch?         @relation(fields: [twitch_id], references: [id])
+  twitch_id         Int?            @unique
+  streamlabs        StreamLabs?     @relation(fields: [streamlabs_id], references: [id])
+  streamlabs_id     Int?            @unique
+  streamelements    StreamElements? @relation(fields: [streamelements_id], references: [id])
+  streamelements_id Int?            @unique
+
+  @@map("user")
+}
+
+model Twitch {
+  id         Int     @id @default(autoincrement())
+  account_id String? @unique
+  user       User?
+
+  @@map("twitch")
+}
+
+model StreamLabs {
+  id            Int     @id @default(autoincrement())
+  account_id    String? @unique
+  user          User?
+  access_token  String?
+  refresh_token String?
+  socket_token  String?
+
+  @@map("streamlabs")
+}
+
+model StreamElements {
+  id         Int     @id @default(autoincrement())
+  account_id String? @unique
+  user       User?
+  jwt        String?
+
+  @@map("streamelements")
+}

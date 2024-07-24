@@ -1,12 +1,12 @@
-import dotenv from 'dotenv';
-import config from 'config';
+import dotenv from "dotenv";
+import config from "config";
 
 dotenv.config();
 
 function getEnvVariable(name: string): string {
     const value: string | undefined = process.env[name];
     if (!value) {
-        throw new Error(`Environment variable ${name} is required but not defined.`);
+        throw new Error(`Environment variable ${name} is undefined.`);
     }
     return value;
 }
@@ -16,33 +16,47 @@ interface App {
     port: number;
 }
 
-interface StreamLabs {
-    clientId: string;
-    clientSecret: string;
+interface StreamElements {
     apiUrl: string;
     websocketUrl: string;
+    jwt: string;
+}
+
+interface StreamLabs {
+    apiUrl: string;
+    websocketUrl: string;
+    clientId: string;
+    clientSecret: string;
 }
 
 interface Configuration {
     app: App;
+    streamElements: StreamElements;
     streamLabs: StreamLabs;
 }
 
 const app: App = {
-    url:  config.get('app.url'),
-    port: config.get('app.port')
+    url:  config.get("app.url"),
+    port: config.get("app.port"),
+}
+
+const streamElements: StreamElements = {
+    apiUrl: config.get("streamElements.apiUrl"),
+    websocketUrl: config.get("streamElements.websocketUrl"),
+    jwt: getEnvVariable("STREAMELEMENTS_JWT"),
 }
 
 const streamLabs: StreamLabs = {
-    clientId: getEnvVariable('STREAMLABS_CLIENT_ID'),
-    clientSecret: getEnvVariable('STREAMLABS_CLIENT_SECRET'),
-    apiUrl: config.get('streamLabs.apiUrl'),
-    websocketUrl: config.get('streamLabs.websocketUrl')
+    apiUrl: config.get("streamLabs.apiUrl"),
+    websocketUrl: config.get("streamLabs.websocketUrl"),
+    clientId: getEnvVariable("STREAMLABS_CLIENT_ID"),
+    clientSecret: getEnvVariable("STREAMLABS_CLIENT_SECRET"),
 };
 
 const configuration: Configuration = {
     app: app,
-    streamLabs: streamLabs
+    streamElements: streamElements,
+    streamLabs: streamLabs,
 };
 
 export default configuration;
