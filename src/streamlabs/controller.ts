@@ -64,7 +64,7 @@ router.get("/oauth/callback", async (req, res, next): Promise<void> => {
         const twitchAccountId: string = String(userResponse.data.twitch.id) ?? ((): void => {
             throw new Error("Twitch Account ID is undefined.");
         });
-        const streamLabsAccountId: string = userResponse.data.streamlabs.id ?? ((): void => {
+        const streamLabsAccountId: string = String(userResponse.data.streamlabs.id) ?? ((): void => {
             throw new Error("StreamLabs Account ID is undefined.");
         });
 

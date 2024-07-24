@@ -30,7 +30,7 @@ router.get("/login", async (req, res, next): Promise<void> => {
         const twitchAccountId: string = String(userResponse.data.channels.find((channel: any): boolean => channel.provider == "twitch")?.providerId ?? ((): void => {
             throw new Error("Twitch Account ID is undefined.");
         }));
-        const streamElementsAccountId: string = userResponse.data._id ?? ((): void => {
+        const streamElementsAccountId: string = String(userResponse.data._id) ?? ((): void => {
             throw new Error("StreamLabs Account ID is undefined.");
         });
 

@@ -1,6 +1,6 @@
 import prisma from "../prisma";
 import {IdView} from "../views";
-import {StreamLabs, User} from "@prisma/client";
+import {StreamLabs} from "@prisma/client";
 
 class StreamLabsService {
 
