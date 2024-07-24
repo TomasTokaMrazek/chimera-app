@@ -19,7 +19,6 @@ interface App {
 interface StreamElements {
     apiUrl: string;
     websocketUrl: string;
-    jwt: string;
 }
 
 interface StreamLabs {
@@ -36,27 +35,26 @@ interface Configuration {
 }
 
 const app: App = {
-    url:  config.get("app.url"),
-    port: config.get("app.port"),
-}
+    url: config.get("app.url"),
+    port: config.get("app.port")
+};
 
 const streamElements: StreamElements = {
     apiUrl: config.get("streamElements.apiUrl"),
     websocketUrl: config.get("streamElements.websocketUrl"),
-    jwt: getEnvVariable("STREAMELEMENTS_JWT"),
-}
+};
 
 const streamLabs: StreamLabs = {
     apiUrl: config.get("streamLabs.apiUrl"),
     websocketUrl: config.get("streamLabs.websocketUrl"),
     clientId: getEnvVariable("STREAMLABS_CLIENT_ID"),
-    clientSecret: getEnvVariable("STREAMLABS_CLIENT_SECRET"),
+    clientSecret: getEnvVariable("STREAMLABS_CLIENT_SECRET")
 };
 
 const configuration: Configuration = {
     app: app,
     streamElements: streamElements,
-    streamLabs: streamLabs,
+    streamLabs: streamLabs
 };
 
 export default configuration;
