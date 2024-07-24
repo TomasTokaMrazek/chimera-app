@@ -2,10 +2,11 @@ import express, {Router} from "express";
 import {JwtPayload} from "jsonwebtoken";
 
 import configuration from "../configuration";
-import http, {AxiosResponse} from "../axios";
+import axiosInstance, {AxiosResponse} from "../axios";
 import twitchService from "../twitch/service";
 import streamElementsService from "../streamelements/service";
 import streamElementsSocket from "../streamelements/socket";
+import {IdView} from "../views";
 
 type StreamElementsJwtPayload = JwtPayload & {
     channel: string
@@ -17,7 +18,6 @@ const router: Router = express.Router();
 
 router.get("/login", async (req, res, next): Promise<void> => {
     try {
-
         const jwt: string = req.query.jwt as string;
 
         const config: {} = {
@@ -26,24 +26,16 @@ router.get("/login", async (req, res, next): Promise<void> => {
             }
         };
 
-        const ids = await http.get(streamElementsApi + "/users/current", config)
-            .then((response: AxiosResponse<any, any>) => {
-                const twitchAccountId: number = response.data.channels.find((channel: any): boolean => channel.provider == "twitch")?.providerId ?? ((): void => {
-                    throw new Error("Twitch Account ID is undefined.");
-                });
-                const streamElementsAccountId: number = response.data._id ?? ((): void => {
-                    throw new Error("StreamElements Account ID is undefined.");
-                });
-                console.log(`Twitch ID: ${twitchAccountId}`);
-                console.log(`StreamElements ID: ${streamElementsAccountId}`);
-                return {
-                    twitchAccountId: String(twitchAccountId),
-                    streamElementsAccountId: String(streamElementsAccountId)
-                };
-            });
+        const userResponse: AxiosResponse<any, any> = await axiosInstance.get(streamElementsApi + "/users/current", config);
+        const twitchAccountId: string = String(userResponse.data.channels.find((channel: any): boolean => channel.provider == "twitch")?.providerId ?? ((): void => {
+            throw new Error("Twitch Account ID is undefined.");
+        }));
+        const streamElementsAccountId: string = userResponse.data._id ?? ((): void => {
+            throw new Error("StreamLabs Account ID is undefined.");
+        });
 
-        const twitchId = await twitchService.getTwitchId(ids.twitchAccountId);
-        const streamElementsId = await streamElementsService.getStreamElementsId(ids.streamElementsAccountId, twitchId.id);
+        const twitchId: IdView = await twitchService.getTwitchId(twitchAccountId);
+        const streamElementsId: IdView = await streamElementsService.getStreamElementsId(streamElementsAccountId, twitchId.id);
 
         await streamElementsService.updateTokens(streamElementsId.id, jwt);
 

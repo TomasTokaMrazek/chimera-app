@@ -1,4 +1,6 @@
 import prisma from "../prisma";
+import {IdView} from "../views";
+import {StreamElements} from "@prisma/client";
 
 class StreamElementsService {
 
@@ -12,7 +14,7 @@ class StreamElementsService {
         return StreamElementsService.instance;
     }
 
-    public async getStreamElementsId(accountId: string, twitchId: number) {
+    public async getStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
         return prisma.streamElements
             .upsert({
                 where: {
@@ -33,7 +35,7 @@ class StreamElementsService {
             });
     }
 
-    public async updateTokens(id: number, jwt: string) {
+    public async updateTokens(id: number, jwt: string): Promise<StreamElements> {
         return prisma.streamElements
             .update({
                 where: {

@@ -5,7 +5,7 @@ dotenv.config();
 
 function getEnvVariable(name: string): string {
     const value: string | undefined = process.env[name];
-    if (!value) {
+    if (value === undefined) {
         throw new Error(`Environment variable ${name} is undefined.`);
     }
     return value;

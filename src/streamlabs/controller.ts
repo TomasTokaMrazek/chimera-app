@@ -1,10 +1,11 @@
 import express, {Router} from "express";
 
 import configuration from "../configuration";
-import http, {AxiosRequestConfig, AxiosResponse} from "../axios";
+import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../axios";
 import streamLabsService from "./service";
 import streamLabsSocket from "./socket";
 import twitchService from "../twitch/service";
+import {IdView} from "../views";
 
 const streamLabsApi: string = configuration.streamLabs.apiUrl;
 
@@ -42,52 +43,37 @@ router.get("/oauth/callback", async (req, res, next): Promise<void> => {
             }
         };
 
-        const oauthTokens = await http
-            .post(streamLabsApi + "/token", tokenData, tokenConfig)
-            .then((response: AxiosResponse<any, any>) => {
-                return {
-                    accessToken: String(response.data.access_token),
-                    refreshToken: String(response.data.refresh_token)
-                };
-            });
+        const oauthTokensResponse: AxiosResponse<any, any> = await axiosInstance.post(streamLabsApi + "/token", tokenData, tokenConfig);
+        const accessToken: string = String(oauthTokensResponse.data.access_token)  ?? ((): void => {
+            throw new Error("Access Token is undefined.");
+        });
+        const refreshToken: string = String(oauthTokensResponse.data.refresh_token)  ?? ((): void => {
+            throw new Error("Refresh Token is undefined.");
+        });
 
         const config: {} = {
             headers: {
-                "Authorization": `Bearer ${oauthTokens.accessToken}`
+                "Authorization": `Bearer ${accessToken}`
             }
         };
 
-        const socketToken = await http
-            .get(streamLabsApi + "/socket/token", config)
-            .then((response: AxiosResponse<any, any>) => {
-                return {
-                    socketToken: String(response.data.socket_token)
-                };
-            });
+        const socketTokenResponse: AxiosResponse<any, any> = await axiosInstance.get(streamLabsApi + "/socket/token", config);
+        const socketToken: string = String(socketTokenResponse.data.socket_token);
 
-        const ids = await http
-            .get(streamLabsApi + "/user", config)
-            .then((response: AxiosResponse<any, any>) => {
-                const twitchAccountId: number = response.data.twitch.id ?? ((): void => {
-                    throw new Error("Twitch Account ID is undefined.");
-                });
-                const streamLabsAccountId: number = response.data.streamlabs.id ?? ((): void => {
-                    throw new Error("StreamLabs Account ID is undefined.");
-                });
-                console.log(`Twitch Account ID: ${twitchAccountId}`);
-                console.log(`StreamLabs Account ID: ${streamLabsAccountId}`);
-                return {
-                    twitchAccountId: String(twitchAccountId),
-                    streamLabsAccountId: String(streamLabsAccountId)
-                };
-            });
+        const userResponse: AxiosResponse<any, any> = await axiosInstance.get(streamLabsApi + "/user", config);
+        const twitchAccountId: string = String(userResponse.data.twitch.id) ?? ((): void => {
+            throw new Error("Twitch Account ID is undefined.");
+        });
+        const streamLabsAccountId: string = userResponse.data.streamlabs.id ?? ((): void => {
+            throw new Error("StreamLabs Account ID is undefined.");
+        });
 
-        const twitchId = await twitchService.getTwitchId(ids.twitchAccountId);
-        const streamLabsId = await streamLabsService.getStreamLabsId(ids.streamLabsAccountId, twitchId.id);
+        const twitchId: IdView = await twitchService.getTwitchId(twitchAccountId);
+        const streamLabsId: IdView = await streamLabsService.getStreamLabsId(streamLabsAccountId, twitchId.id);
 
-        await streamLabsService.updateTokens(streamLabsId.id, oauthTokens.accessToken, oauthTokens.refreshToken, socketToken.socketToken);
+        await streamLabsService.updateTokens(streamLabsId.id, accessToken, refreshToken, socketToken);
 
-        streamLabsSocket(socketToken.socketToken);
+        streamLabsSocket(socketToken);
 
         res.redirect("/success");
     } catch (error) {

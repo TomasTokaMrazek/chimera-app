@@ -1,4 +1,6 @@
 import prisma from "../prisma";
+import {IdView} from "../views";
+import {StreamLabs, User} from "@prisma/client";
 
 class StreamLabsService {
 
@@ -12,7 +14,7 @@ class StreamLabsService {
         return StreamLabsService.instance;
     }
 
-    public async getStreamLabsId(accountId: string, twitchId: number) {
+    public async getStreamLabsId(accountId: string, twitchId: number): Promise<IdView> {
         return prisma.streamLabs
             .upsert({
                 where: {
@@ -33,7 +35,7 @@ class StreamLabsService {
             });
     }
 
-    public async updateTokens(id: number, accessToken: string, refreshToken: string, socketToken: string) {
+    public async updateTokens(id: number, accessToken: string, refreshToken: string, socketToken: string): Promise<StreamLabs> {
         return prisma.streamLabs
             .update({
                 where: {

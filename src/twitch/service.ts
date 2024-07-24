@@ -1,4 +1,5 @@
 import prisma from "../prisma";
+import {IdView} from "../views";
 
 class TwitchService {
 
@@ -12,7 +13,7 @@ class TwitchService {
         return TwitchService.instance;
     }
 
-    public async getTwitchId(accountId: string) {
+    public async getTwitchId(accountId: string): Promise<IdView> {
         return prisma.twitch
             .upsert({
                 where: {
@@ -21,30 +22,14 @@ class TwitchService {
                 create: {
                     account_id: accountId,
                     user: {
-                        create: {
-
-                        }
+                        create: {}
                     }
                 },
-                update: {
-
-                },
+                update: {},
                 select: {
                     id: true
                 }
             });
-    }
-
-    public async getUser(accountId: string) {
-        return prisma.twitch
-            .findUnique({
-                where: {
-                    account_id: accountId
-                },
-                select: {
-                    user: true
-                }
-            })
     }
 
 }
