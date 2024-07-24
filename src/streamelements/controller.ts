@@ -3,8 +3,8 @@ import {JwtPayload} from "jsonwebtoken";
 
 import configuration from "../configuration";
 import axiosInstance, {AxiosResponse} from "../axios";
-import twitchService from "../twitch/service";
-import streamElementsService from "../streamelements/service";
+import twitchRepository from "../twitch/repository";
+import streamElementsService from "../streamelements/repository";
 import streamElementsSocket from "../streamelements/socket";
 import {IdView} from "../views";
 
@@ -34,7 +34,7 @@ router.get("/login", async (req, res, next): Promise<void> => {
             throw new Error("StreamLabs Account ID is undefined.");
         });
 
-        const twitchId: IdView = await twitchService.getTwitchId(twitchAccountId);
+        const twitchId: IdView = await twitchRepository.getTwitchId(twitchAccountId);
         const streamElementsId: IdView = await streamElementsService.getStreamElementsId(streamElementsAccountId, twitchId.id);
 
         await streamElementsService.updateTokens(streamElementsId.id, jwt);

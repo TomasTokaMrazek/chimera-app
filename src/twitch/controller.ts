@@ -1,6 +1,6 @@
 import express, {Router} from "express";
 
-import twitchService from "./service";
+import twitchRepository from "./repository";
 
 const router: Router = express.Router();
 
@@ -8,7 +8,7 @@ router.get("/login", async (req, res, next): Promise<void> => {
     try {
         const accountId: string = req.query.accountId as string;
 
-        await twitchService.getTwitchId(accountId);
+        await twitchRepository.getTwitchId(accountId);
 
         res.redirect("/success");
     } catch (error) {

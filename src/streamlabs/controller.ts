@@ -2,9 +2,9 @@ import express, {Router} from "express";
 
 import configuration from "../configuration";
 import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../axios";
-import streamLabsService from "./service";
+import streamLabsRepository from "./repository";
 import streamLabsSocket from "./socket";
-import twitchService from "../twitch/service";
+import twitchRepository from "../twitch/repository";
 import {IdView} from "../views";
 
 const streamLabsApi: string = configuration.streamLabs.apiUrl;
@@ -68,10 +68,10 @@ router.get("/oauth/callback", async (req, res, next): Promise<void> => {
             throw new Error("StreamLabs Account ID is undefined.");
         });
 
-        const twitchId: IdView = await twitchService.getTwitchId(twitchAccountId);
-        const streamLabsId: IdView = await streamLabsService.getStreamLabsId(streamLabsAccountId, twitchId.id);
+        const twitchId: IdView = await twitchRepository.getTwitchId(twitchAccountId);
+        const streamLabsId: IdView = await streamLabsRepository.getStreamLabsId(streamLabsAccountId, twitchId.id);
 
-        await streamLabsService.updateTokens(streamLabsId.id, accessToken, refreshToken, socketToken);
+        await streamLabsRepository.updateTokens(streamLabsId.id, accessToken, refreshToken, socketToken);
 
         streamLabsSocket(socketToken);
 
