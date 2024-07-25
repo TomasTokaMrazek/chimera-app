@@ -1,6 +1,6 @@
 import {PrismaClient} from "@prisma/client";
 
-function PrismaInstance(): PrismaClient {
+function prismaInstance(): PrismaClient {
     const instance = new PrismaClient({
         log: [
             {
@@ -17,4 +17,4 @@ function PrismaInstance(): PrismaClient {
     return instance;
 }
 
-export default PrismaInstance();
+export default prismaInstance();

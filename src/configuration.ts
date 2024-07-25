@@ -24,6 +24,7 @@ interface StreamElements {
 interface StreamLabs {
     apiUrl: string;
     websocketUrl: string;
+    redirectUrl: string;
     clientId: string;
     clientSecret: string;
 }
@@ -41,12 +42,13 @@ const app: App = {
 
 const streamElements: StreamElements = {
     apiUrl: config.get("streamElements.apiUrl"),
-    websocketUrl: config.get("streamElements.websocketUrl"),
+    websocketUrl: config.get("streamElements.websocketUrl")
 };
 
 const streamLabs: StreamLabs = {
     apiUrl: config.get("streamLabs.apiUrl"),
     websocketUrl: config.get("streamLabs.websocketUrl"),
+    redirectUrl: config.get("streamLabs.redirectUrl"),
     clientId: getEnvVariable("STREAMLABS_CLIENT_ID"),
     clientSecret: getEnvVariable("STREAMLABS_CLIENT_SECRET")
 };

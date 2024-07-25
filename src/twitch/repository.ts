@@ -1,19 +1,19 @@
 import prisma from "../prisma";
 import {IdView} from "../views";
 
-class TwitchService {
+class TwitchRepository {
 
-    private static instance: TwitchService = new TwitchService();
+    private static instance: TwitchRepository = new TwitchRepository();
 
     private constructor() {
 
     }
 
-    public static getInstance(): TwitchService {
-        return TwitchService.instance;
+    public static getInstance(): TwitchRepository {
+        return TwitchRepository.instance;
     }
 
-    public async getTwitchId(accountId: string): Promise<IdView> {
+    public async getOrInsertTwitchId(accountId: string): Promise<IdView> {
         return prisma.twitch
             .upsert({
                 where: {
@@ -34,4 +34,4 @@ class TwitchService {
 
 }
 
-export default TwitchService.getInstance();
+export default TwitchRepository.getInstance();

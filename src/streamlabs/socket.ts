@@ -2,24 +2,29 @@ import io from "socket.io-client";
 
 import configuration from "../configuration";
 
-function connect(socketToken: string) {
-    const socket = io(configuration.streamLabs.websocketUrl + `?token=${socketToken}`, {
-        transports: ["websocket"]
-    });
+const websocketUrl: string = configuration.streamLabs.websocketUrl;
 
-    socket.on("connect", (): void => {
-        console.log("Connected to the StreamLabs websocket server.");
-    });
+class StreamLabsSocketClient {
 
-    socket.on("disconnect", (): void => {
-        console.log("Disconnected from the StreamLabs websocket server.");
-    });
+    async openSocket(socketToken: string) {
+        const socket = io(`${websocketUrl}?token=${socketToken}`, {
+            transports: ["websocket"]
+        });
 
-    socket.onAny((eventName, ...args) => {
-        console.log(`EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
-    });
+        socket.on("connect", (): void => {
+            console.log("Connected to the StreamLabs websocket server.");
+        });
 
-    return socket;
+        socket.on("disconnect", (): void => {
+            console.log("Disconnected from the StreamLabs websocket server.");
+        });
+
+        socket.onAny((eventName, ...args): void => {
+            console.log(`EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
+        });
+
+        return socket;
+    }
 }
 
-export default connect;
+export default new StreamLabsSocketClient();

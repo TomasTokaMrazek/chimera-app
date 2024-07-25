@@ -1,9 +1,8 @@
 import express, {Express, Request, Response} from "express";
 
 import configuration from "./configuration";
-import twitchRouter from "./twitch/controller";
-import streamElementsRouter from "./streamelements/controller";
-import streamLabsRouter from "./streamlabs/controller";
+import streamElementsRoutes from "./streamelements/routes";
+import streamLabsRoutes from "./streamlabs/routes";
 
 const app: Express = express();
 const port: number = configuration.app.port;
@@ -15,9 +14,8 @@ app.get("/success", (req: Request, res: Response): void => {
     res.send("Success!");
 });
 
-app.use("/twitch", twitchRouter);
-app.use("/streamelements", streamElementsRouter);
-app.use("/streamlabs", streamLabsRouter);
+app.use("/streamelements", streamElementsRoutes);
+app.use("/streamlabs", streamLabsRoutes);
 
 process.on("SIGTERM", () => process.exit(0));
 process.on("SIGINT", () => process.exit(0));

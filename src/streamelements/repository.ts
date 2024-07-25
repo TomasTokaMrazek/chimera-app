@@ -1,20 +1,20 @@
 import prisma from "../prisma";
-import {IdView} from "../views";
 import {StreamElements} from "@prisma/client";
+import {IdView} from "../views";
 
-class StreamElementsService {
+class StreamElementsRepository {
 
-    private static instance: StreamElementsService = new StreamElementsService();
+    private static instance: StreamElementsRepository = new StreamElementsRepository();
 
     private constructor() {
 
     }
 
-    public static getInstance(): StreamElementsService {
-        return StreamElementsService.instance;
+    public static getInstance(): StreamElementsRepository {
+        return StreamElementsRepository.instance;
     }
 
-    public async getStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
+    public async getOrCreateStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
         return prisma.streamElements
             .upsert({
                 where: {
@@ -49,4 +49,6 @@ class StreamElementsService {
 
 }
 
-export default StreamElementsService.getInstance();
+export {StreamElements};
+
+export default StreamElementsRepository.getInstance();

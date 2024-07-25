@@ -1,6 +1,6 @@
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from "axios";
 
-function AxiosInstance(): AxiosInstance {
+function axiosInstance(): AxiosInstance {
     const instance: AxiosInstance = axios.create();
 
     instance.interceptors.request.use(request => {
@@ -14,8 +14,8 @@ function AxiosInstance(): AxiosInstance {
         const message: {} = {
             "status": response.status,
             "headers": response.headers,
-            "data": response.data,
-        }
+            "data": response.data
+        };
 
         console.log("Response:\n", JSON.stringify(message, null, 2));
         return response;
@@ -26,4 +26,4 @@ function AxiosInstance(): AxiosInstance {
 
 export {AxiosRequestConfig, AxiosResponse};
 
-export default AxiosInstance();
+export default axiosInstance();
