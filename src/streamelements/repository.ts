@@ -4,16 +4,6 @@ import {IdView} from "../views";
 
 class StreamElementsRepository {
 
-    private static instance: StreamElementsRepository = new StreamElementsRepository();
-
-    private constructor() {
-
-    }
-
-    public static getInstance(): StreamElementsRepository {
-        return StreamElementsRepository.instance;
-    }
-
     public async getOrCreateStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
         return prisma.streamElements
             .upsert({
@@ -51,4 +41,4 @@ class StreamElementsRepository {
 
 export {StreamElements};
 
-export default StreamElementsRepository.getInstance();
+export default new StreamElementsRepository();

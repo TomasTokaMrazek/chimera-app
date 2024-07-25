@@ -3,16 +3,6 @@ import {IdView} from "../views";
 
 class TwitchRepository {
 
-    private static instance: TwitchRepository = new TwitchRepository();
-
-    private constructor() {
-
-    }
-
-    public static getInstance(): TwitchRepository {
-        return TwitchRepository.instance;
-    }
-
     public async getOrInsertTwitchId(accountId: string): Promise<IdView> {
         return prisma.twitch
             .upsert({
@@ -34,4 +24,4 @@ class TwitchRepository {
 
 }
 
-export default TwitchRepository.getInstance();
+export default new TwitchRepository();

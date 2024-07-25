@@ -13,16 +13,6 @@ const streamElementsApi: string = configuration.streamElements.apiUrl;
 
 class StreamElementsService {
 
-    private static instance: StreamElementsService = new StreamElementsService();
-
-    private constructor() {
-
-    }
-
-    public static getInstance(): StreamElementsService {
-        return StreamElementsService.instance;
-    }
-
     public async getAccountIds(jwt: string): Promise<AccountIds> {
         const config: AxiosRequestConfig = {
             headers: {
@@ -57,4 +47,4 @@ class StreamElementsService {
 
 }
 
-export default StreamElementsService.getInstance();
+export default new StreamElementsService();
