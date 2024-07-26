@@ -4,6 +4,15 @@ import {IdView} from "../views";
 
 class StreamElementsRepository {
 
+    public async getById(id: number): Promise<StreamElements> {
+        return prisma.streamElements
+            .findUniqueOrThrow({
+                where: {
+                    id: id
+                }
+            });
+    }
+
     public async getOrCreateStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
         return prisma.streamElements
             .upsert({

@@ -20,8 +20,8 @@ model User {
 }
 
 model Twitch {
-  id         Int     @id @default(autoincrement())
-  account_id String? @unique
+  id         Int    @id @default(autoincrement())
+  account_id String @unique
   user       User?
 
   @@map("twitch")
@@ -29,7 +29,7 @@ model Twitch {
 
 model StreamLabs {
   id            Int     @id @default(autoincrement())
-  account_id    String? @unique
+  account_id    String  @unique
   user          User?
   access_token  String?
   refresh_token String?
@@ -40,7 +40,7 @@ model StreamLabs {
 
 model StreamElements {
   id         Int     @id @default(autoincrement())
-  account_id String? @unique
+  account_id String  @unique
   user       User?
   jwt        String?
 

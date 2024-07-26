@@ -4,6 +4,15 @@ import {IdView} from "../views";
 
 class StreamLabsRepository {
 
+    public async getById(id: number): Promise<StreamLabs> {
+        return prisma.streamLabs
+            .findUniqueOrThrow({
+                where: {
+                    id: id
+                }
+            });
+    }
+
     public async getOrCreateStreamLabsId(accountId: string, twitchId: number): Promise<IdView> {
         return prisma.streamLabs
             .upsert({

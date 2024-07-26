@@ -12,16 +12,24 @@ class StreamElementsSocketClient {
         });
 
         socket.on("connect", (): void => {
-            console.log("Connected to the StreamLabs websocket server.");
+            console.log("[StreamElements] Connected to the websocket server.");
             socket.emit("authenticate", {method: "jwt", token: jwt});
         });
 
+        socket.on("authenticated", (): void => {
+            console.log("[StreamElements] Authenticated to the websocket server.");
+        });
+
+        socket.on("unauthorized", (): void => {
+            console.log("[StreamElements] Unable to authenticate to the websocket server.");
+        });
+
         socket.on("disconnect", (): void => {
-            console.log("Disconnected from the StreamLabs websocket server.");
+            console.log("[StreamElements] Disconnected from the websocket server.");
         });
 
         socket.onAny((eventName, ...args): void => {
-            console.log(`EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
+            console.log(`[StreamElements] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
         });
 
         return socket;
