@@ -8,12 +8,12 @@ import twitchRepository from "../twitch/repository";
 import {AccountIds} from "./types";
 
 import StreamElementsSocketClient from "./client/socket";
-import StreamElementsHttpClient, {CurrentUserRequest, CurrentUserChannel} from "./client/http";
+import StreamElementsHttpClient, {CurrentUserChannel, CurrentUserRequest} from "./client/http";
 
 class StreamElementsService {
 
-    private httpClients: Map<string, StreamElementsHttpClient> = new Map();
-    private socketClients: Map<string, StreamElementsSocketClient> = new Map();
+    private httpClients: Map<number, StreamElementsHttpClient> = new Map();
+    private socketClients: Map<number, StreamElementsSocketClient> = new Map();
 
     public async login(jwt: string): Promise<void> {
         const accountIds: AccountIds = await this.getAccountIds(jwt);
@@ -36,20 +36,26 @@ class StreamElementsService {
         })();
 
         const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(jwt);
-        this.httpClients.set(streamElements.account_id, httpclient);
+        this.httpClients.set(user.id, httpclient);
 
-        const socketClient: StreamElementsSocketClient = StreamElementsSocketClient.createInstance(jwt);
-        this.socketClients.set(streamElements.account_id, socketClient);
+        const socketClient: StreamElementsSocketClient = StreamElementsSocketClient.createInstance(user, jwt);
+        this.socketClients.set(user.id, socketClient);
+    }
+
+    public async getHttpClient(userId: number): Promise<StreamElementsHttpClient> {
+        return this.httpClients.get(userId) ?? ((): StreamElementsHttpClient => {
+            throw new Error("StreamElements HTTP client is undefined.");
+        })();
     }
 
     private async getAccountIds(jwt: string): Promise<AccountIds> {
         const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(jwt);
         const userResponse: AxiosResponse<CurrentUserRequest> = await httpclient.getCurrentUser();
-            const twitchAccountId: string = userResponse.data.channels.find((channel: CurrentUserChannel): boolean => channel.provider == "twitch")?.providerId ?? ((): string => {
+        const twitchAccountId: string = userResponse.data.channels.find((channel: CurrentUserChannel): boolean => channel.provider == "twitch")?.providerId ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");
         })();
         const streamElementsAccountId: string = userResponse.data._id ?? ((): string => {
-            throw new Error("StreamLabs Account ID is undefined.");
+            throw new Error("StreamElements Account ID is undefined.");
         })();
 
         return {

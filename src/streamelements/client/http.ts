@@ -26,7 +26,17 @@ class StreamElementsHttpClient {
         return axiosInstance.get(`${streamElementsApi}/users/current`, config);
     }
 
-    public getTip(channel: string, queryParams: TipListRequestParams): Promise<AxiosResponse<TipListResponse>> {
+    public getCurrentUserChannel(): Promise<AxiosResponse<CurrentUserChannel>> {
+        const config: AxiosRequestConfig = {
+            headers: {
+                "Authorization": `Bearer ${this.jwt}`
+            }
+        };
+
+        return axiosInstance.get(`${streamElementsApi}/channels/me`, config);
+    }
+
+    public getTips(channel: string, queryParams: TipListRequestParams): Promise<AxiosResponse<TipListResponse>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.jwt}`
@@ -37,18 +47,17 @@ class StreamElementsHttpClient {
         return axiosInstance.get(`${streamElementsApi}/tips/${channel}`, config);
     }
 
-    public postTip(channel: string, body: TipRequest): Promise<AxiosResponse<TipListDoc>> {
+    public createTip(channel: string, body: TipRequest): Promise<AxiosResponse<any>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.jwt}`
-            },
-            data: body
+            }
         };
 
-        return axiosInstance.post(`${streamElementsApi}/users/${channel}`, config);
+        return axiosInstance.post(`${streamElementsApi}/tips/${channel}`, body, config);
     }
 
-    public getTipById(channel: string, tipId: string): Promise<AxiosResponse<TipListDoc>> {
+    public getTip(channel: string, tipId: string): Promise<AxiosResponse<any>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.jwt}`
@@ -74,16 +83,16 @@ export interface CurrentUserChannel {
 export interface TipRequest {
     user: TipUser;
     provider: string;
-    message: string;
+    message?: string;
     amount: number;
     currency: string;
     imported: true;
 }
 
 export interface TipUser {
-    userId: string;
-    username: string;
-    email: string;
+    userId?: string;
+    username?: string;
+    email?: string;
 }
 
 export interface TipListRequestParams {

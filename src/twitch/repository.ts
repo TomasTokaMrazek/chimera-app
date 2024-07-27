@@ -3,7 +3,7 @@ import {IdView, UserView} from "../views";
 
 class TwitchRepository {
 
-    public async getUser(accountId: string): Promise<UserView>  {
+    public async getUser(accountId: string): Promise<UserView> {
         return prisma.twitch
             .findUniqueOrThrow({
                 where: {

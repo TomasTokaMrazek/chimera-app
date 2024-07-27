@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from "express";
 
 import streamElementsService from "./service";
 
-class StreamLabsController {
+class StreamElementsController {
 
     public async login(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -26,4 +26,4 @@ class StreamLabsController {
 
 }
 
-export default new StreamLabsController();
+export default new StreamElementsController();

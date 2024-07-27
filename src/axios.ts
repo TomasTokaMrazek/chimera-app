@@ -4,7 +4,13 @@ function axiosInstance(): AxiosInstance {
     const instance: AxiosInstance = axios.create();
 
     instance.interceptors.request.use(request => {
-        const message: {} = request;
+        const message: {} = {
+            "url": request.url,
+            "method": request.method,
+            "headers": request.headers,
+            "data": request.data,
+            "params": request.params
+        };
 
         console.log("Request:\n", JSON.stringify(message, null, 2));
         return request;

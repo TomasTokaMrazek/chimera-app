@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id                Int             @id @default(autoincrement())
-  twitch            Twitch?         @relation(fields: [twitch_id], references: [id])
-  twitch_id         Int?            @unique
-  streamlabs        StreamLabs?     @relation(fields: [streamlabs_id], references: [id])
-  streamlabs_id     Int?            @unique
-  streamelements    StreamElements? @relation(fields: [streamelements_id], references: [id])
-  streamelements_id Int?            @unique
+  id                   Int                    @id @default(autoincrement())
+  twitch               Twitch?                @relation(fields: [twitch_id], references: [id])
+  twitch_id            Int?                   @unique
+  streamlabs           StreamLabs?            @relation(fields: [streamlabs_id], references: [id])
+  streamlabs_id        Int?                   @unique
+  streamelements       StreamElements?        @relation(fields: [streamelements_id], references: [id])
+  streamelements_id    Int?                   @unique
+  EventSynchronization EventSynchronization[]
 
   @@map("user")
 }
@@ -45,4 +46,14 @@ model StreamElements {
   jwt        String?
 
   @@map("streamelements")
+}
+
+model EventSynchronization {
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id Int
+  from    String
+  to      String
+
+  @@id([user_id, from, to])
+  @@map("event_synchronization")
 }

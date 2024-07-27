@@ -1,17 +1,19 @@
 import io, {Socket} from "socket.io-client";
 
 import configuration from "../../configuration";
+import {User} from "@prisma/client";
 
 const websocketUrl: string = configuration.streamElements.websocketUrl;
 
 class StreamElementsSocketClient {
 
     private constructor(
-        private readonly socket: Socket
+        private readonly socket: Socket,
+        private readonly user: User
     ) {
     }
 
-    static createInstance(jwt: string): StreamElementsSocketClient {
+    static createInstance(user: User, jwt: string): StreamElementsSocketClient {
         const socket: Socket = io(`${websocketUrl}`, {
             transports: ["websocket"]
         });
@@ -35,7 +37,8 @@ class StreamElementsSocketClient {
         socket.onAny((eventName, ...args: any[]): void => {
             console.log(`[StreamElements] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
         });
-        return new StreamElementsSocketClient(socket);
+
+        return new StreamElementsSocketClient(socket, user);
     }
 
 }

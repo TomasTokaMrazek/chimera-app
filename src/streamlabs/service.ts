@@ -18,8 +18,8 @@ const clientID: string = configuration.streamLabs.clientId;
 
 class StreamLabsService {
 
-    private httpClients: Map<string, StreamLabsHttpClient> = new Map();
-    private socketClients: Map<string, StreamLabsSocketClient> = new Map();
+    private httpClients: Map<number, StreamLabsHttpClient> = new Map();
+    private socketClients: Map<number, StreamLabsSocketClient> = new Map();
 
     public async login(): Promise<URL> {
         const url: URL = new URL(streamLabsApiUrl + "/authorize");
@@ -56,10 +56,16 @@ class StreamLabsService {
         })();
 
         const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
-        this.httpClients.set(streamLabs.account_id, httpclient);
+        this.httpClients.set(user.id, httpclient);
 
-        const socketClient: StreamLabsSocketClient = StreamLabsSocketClient.createInstance(socketToken);
-        this.socketClients.set(streamLabs.account_id, socketClient);
+        const socketClient: StreamLabsSocketClient = StreamLabsSocketClient.createInstance(user, socketToken);
+        this.socketClients.set(user.id, socketClient);
+    }
+
+    public getHttpClient(userId: number): StreamLabsHttpClient {
+        return this.httpClients.get(userId) ?? ((): StreamLabsHttpClient => {
+            throw new Error("StreamLabs HTTP client is undefined.");
+        })();
     }
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {

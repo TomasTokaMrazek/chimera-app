@@ -58,6 +58,26 @@ class StreamLabsHttpClient {
         return axiosInstance.get(`${streamLabsApiUrl}/user`, config);
     }
 
+    public getDonations(): Promise<AxiosResponse<DonationListResponse>> {
+        const config: {} = {
+            headers: {
+                "Authorization": `Bearer ${this.accessToken}`
+            }
+        };
+
+        return axiosInstance.get(`${streamLabsApiUrl}/donations`, config);
+    }
+
+    public createDonation(body: DonationRequest): Promise<AxiosResponse<DonationResponse>> {
+        const config: {} = {
+            headers: {
+                "Authorization": `Bearer ${this.accessToken}`
+            }
+        };
+
+        return axiosInstance.post(`${streamLabsApiUrl}/donations`, config);
+    }
+
 }
 
 export interface TokenRequestParams {
@@ -77,7 +97,7 @@ export interface TokenResponse {
 }
 
 export interface SocketTokenResponse {
-    socket_token: string
+    socket_token: string;
 }
 
 export interface UserResponse {
@@ -88,6 +108,32 @@ export interface UserResponse {
 export interface User {
     id: number,
     display_name: string
+}
+
+export interface DonationListResponse {
+    data: DonationList[];
+}
+
+export interface DonationList {
+    donation_id: number,
+    name: string,
+    message: string,
+    email: string
+    currency: string,
+    amount: string,
+    created_at: number
+}
+
+export interface DonationRequest {
+    name: string,
+    message: string,
+    identifier: string,
+    currency: string,
+    amount: number
+}
+
+export interface DonationResponse {
+    donation_id: number;
 }
 
 export default StreamLabsHttpClient;
