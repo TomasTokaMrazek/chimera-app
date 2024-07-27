@@ -1,16 +1,20 @@
-import io from "socket.io-client";
+import io, {Socket} from "socket.io-client";
 
-import configuration from "../configuration";
+import configuration from "../../configuration";
 
 const websocketUrl: string = configuration.streamElements.websocketUrl;
 
 class StreamElementsSocketClient {
 
-    async openSocket(jwt: string) {
-        const socket = io(`${websocketUrl}`, {
+    private constructor(
+        private readonly socket: Socket
+    ) {
+    }
+
+    static createInstance(jwt: string): StreamElementsSocketClient {
+        const socket: Socket = io(`${websocketUrl}`, {
             transports: ["websocket"]
         });
-
         socket.on("connect", (): void => {
             console.log("[StreamElements] Connected to the websocket server.");
             socket.emit("authenticate", {method: "jwt", token: jwt});
@@ -28,13 +32,12 @@ class StreamElementsSocketClient {
             console.log("[StreamElements] Disconnected from the websocket server.");
         });
 
-        socket.onAny((eventName, ...args): void => {
+        socket.onAny((eventName, ...args: any[]): void => {
             console.log(`[StreamElements] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
         });
-
-        return socket;
+        return new StreamElementsSocketClient(socket);
     }
 
 }
 
-export default new StreamElementsSocketClient();
+export default StreamElementsSocketClient;

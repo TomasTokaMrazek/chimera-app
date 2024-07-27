@@ -1,23 +1,24 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../axios";
+import {AxiosResponse} from "../axios";
 import {IdView, UserView} from "../views";
 
+import {User} from "@prisma/client";
 import streamElementsRepository, {StreamElements} from "./repository";
 import twitchRepository from "../twitch/repository";
 
 import {AccountIds} from "./types";
-import streamElementsSocketClient from "./socket";
 
-import configuration from "../configuration";
-import {User} from "@prisma/client";
-
-const streamElementsApi: string = configuration.streamElements.apiUrl;
+import StreamElementsSocketClient from "./client/socket";
+import StreamElementsHttpClient, {CurrentUserRequest, CurrentUserChannel} from "./client/http";
 
 class StreamElementsService {
+
+    private httpClients: Map<string, StreamElementsHttpClient> = new Map();
+    private socketClients: Map<string, StreamElementsSocketClient> = new Map();
 
     public async login(jwt: string): Promise<void> {
         const accountIds: AccountIds = await this.getAccountIds(jwt);
         await this.setTokens(accountIds, jwt);
-        await this.connectToWebSocket(jwt);
+        await this.connect(accountIds.twitch);
     }
 
     public async connect(twitchAccountId: string): Promise<void> {
@@ -31,26 +32,25 @@ class StreamElementsService {
 
         const streamElements: StreamElements = await streamElementsRepository.getById(streamElementsId);
         const jwt: string = streamElements.jwt ?? ((): string => {
-            throw new Error(`StreamLabs Account '${streamElements.account_id}' is not associated with StreamLabs account.`);
+            throw new Error(`StreamElements Account '${streamElements.account_id}' does not have Authorization token.`);
         })();
 
-        await streamElementsSocketClient.openSocket(jwt);
+        const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(jwt);
+        this.httpClients.set(streamElements.account_id, httpclient);
+
+        const socketClient: StreamElementsSocketClient = StreamElementsSocketClient.createInstance(jwt);
+        this.socketClients.set(streamElements.account_id, socketClient);
     }
 
     private async getAccountIds(jwt: string): Promise<AccountIds> {
-        const config: AxiosRequestConfig = {
-            headers: {
-                "Authorization": `Bearer ${jwt}`
-            }
-        };
-
-        const userResponse: AxiosResponse<any, any> = await axiosInstance.get(streamElementsApi + "/users/current", config);
-        const twitchAccountId: string = String(userResponse.data.channels.find((channel: any): boolean => channel.provider == "twitch")?.providerId ?? ((): void => {
+        const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(jwt);
+        const userResponse: AxiosResponse<CurrentUserRequest> = await httpclient.getCurrentUser();
+            const twitchAccountId: string = userResponse.data.channels.find((channel: CurrentUserChannel): boolean => channel.provider == "twitch")?.providerId ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");
-        }));
-        const streamElementsAccountId: string = String(userResponse.data._id) ?? ((): void => {
+        })();
+        const streamElementsAccountId: string = userResponse.data._id ?? ((): string => {
             throw new Error("StreamLabs Account ID is undefined.");
-        });
+        })();
 
         return {
             twitch: twitchAccountId,
@@ -63,10 +63,6 @@ class StreamElementsService {
         const streamElementsId: IdView = await streamElementsRepository.getOrCreateStreamElementsId(accountIds.streamElements, twitchId.id);
 
         return await streamElementsRepository.updateTokens(streamElementsId.id, jwt);
-    }
-
-    public async connectToWebSocket(socketToken: string) {
-        return await streamElementsSocketClient.openSocket(socketToken);
     }
 
 }

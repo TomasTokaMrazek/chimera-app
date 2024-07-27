@@ -2,8 +2,6 @@ import {NextFunction, Request, Response} from "express";
 
 import streamLabsService from "./service";
 
-import configuration from "../configuration";
-
 class StreamLabsController {
 
     public async login(req: Request, res: Response, next: NextFunction): Promise<void> {

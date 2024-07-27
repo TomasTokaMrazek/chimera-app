@@ -8,6 +8,6 @@ export interface SocketToken {
 }
 
 export interface AccountIds {
-    twitch: string;
-    streamLabs: string;
+    twitch: number;
+    streamLabs: number;
 }

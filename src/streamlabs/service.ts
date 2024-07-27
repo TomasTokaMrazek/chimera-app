@@ -1,21 +1,25 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../axios";
+import {AxiosResponse} from "../axios";
 import {IdView, UserView} from "../views";
 
+import {User} from "@prisma/client";
 import streamLabsRepository, {StreamLabs} from "./repository";
 import twitchRepository from "../twitch/repository";
 
 import {AccountIds, OauthTokens, SocketToken} from "./types";
-import streamLabsSocketClient from "./socket";
+
+import StreamLabsHttpClient, {SocketTokenResponse, TokenResponse, UserResponse} from "./client/http";
+import StreamLabsSocketClient from "./client/socket";
 
 import configuration from "../configuration";
-import {User} from "@prisma/client";
 
 const streamLabsApiUrl: string = configuration.streamLabs.apiUrl;
 const redirectUri: string = configuration.streamLabs.redirectUrl;
 const clientID: string = configuration.streamLabs.clientId;
-const clientSecret: string = configuration.streamLabs.clientSecret;
 
 class StreamLabsService {
+
+    private httpClients: Map<string, StreamLabsHttpClient> = new Map();
+    private socketClients: Map<string, StreamLabsSocketClient> = new Map();
 
     public async login(): Promise<URL> {
         const url: URL = new URL(streamLabsApiUrl + "/authorize");
@@ -30,10 +34,8 @@ class StreamLabsService {
         const oauthTokens: OauthTokens = await this.getOauthTokens(authorizationCode);
         const socketToken: SocketToken = await this.getSocketToken(oauthTokens.accessToken);
         const accountIds: AccountIds = await this.getAccountIds(oauthTokens.accessToken);
-
         await this.setTokens(accountIds, oauthTokens, socketToken);
-
-        await streamLabsSocketClient.openSocket(socketToken.socketToken);
+        await this.connect(accountIds.twitch.toString());
     }
 
     public async connect(twitchAccountId: string): Promise<void> {
@@ -46,29 +48,23 @@ class StreamLabsService {
         })();
 
         const streamLabs: StreamLabs = await streamLabsRepository.getById(streamLabsId);
+        const accessToken: string = streamLabs.access_token ?? ((): string => {
+            throw new Error(`StreamLabs Account '${streamLabs.account_id}' does not have Authorization token`);
+        })();
         const socketToken: string = streamLabs.socket_token ?? ((): string => {
-            throw new Error(`StreamLabs Account '${streamLabs.account_id}' is not associated with StreamLabs account.`);
+            throw new Error(`StreamLabs Account '${streamLabs.account_id}' does not have Authorization token`);
         })();
 
-        await streamLabsSocketClient.openSocket(socketToken);
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
+        this.httpClients.set(streamLabs.account_id, httpclient);
+
+        const socketClient: StreamLabsSocketClient = StreamLabsSocketClient.createInstance(socketToken);
+        this.socketClients.set(streamLabs.account_id, socketClient);
     }
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
-        const tokenData: {} = {
-            "grant_type": "authorization_code",
-            "code": authorizationCode,
-            "redirect_uri": redirectUri,
-            "client_id": clientID,
-            "client_secret": clientSecret
-        };
-
-        const tokenConfig: AxiosRequestConfig = {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            }
-        };
-
-        const oauthTokensResponse: AxiosResponse<any, any> = await axiosInstance.post(streamLabsApiUrl + "/token", tokenData, tokenConfig);
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance("");
+        const oauthTokensResponse: AxiosResponse<TokenResponse> = await httpclient.getOauthTokens(authorizationCode);
         const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
             throw new Error("Access Token is undefined.");
         })();
@@ -83,13 +79,8 @@ class StreamLabsService {
     }
 
     private async getSocketToken(accessToken: string): Promise<SocketToken> {
-        const config: {} = {
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
-        };
-
-        const socketTokenResponse: AxiosResponse<any, any> = await axiosInstance.get(streamLabsApiUrl + "/socket/token", config);
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
+        const socketTokenResponse: AxiosResponse<SocketTokenResponse> = await httpclient.getSocketToken();
         const socketToken: string = socketTokenResponse.data.socket_token ?? ((): string => {
             throw new Error("Socket Token is undefined.");
         })();
@@ -100,17 +91,12 @@ class StreamLabsService {
     }
 
     private async getAccountIds(accessToken: string): Promise<AccountIds> {
-        const config: AxiosRequestConfig = {
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
-        };
-
-        const userResponse: AxiosResponse<any, any> = await axiosInstance.get(streamLabsApiUrl + "/user", config);
-        const twitchAccountId: string = userResponse.data.twitch.id ?? ((): string => {
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
+        const userResponse: AxiosResponse<UserResponse> = await httpclient.getUser();
+        const twitchAccountId: number = userResponse.data.twitch.id ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");
         })();
-        const streamLabsAccountId: string = userResponse.data.streamlabs.id ?? ((): string => {
+        const streamLabsAccountId: number = userResponse.data.streamlabs.id ?? ((): string => {
             throw new Error("StreamLabs Account ID is undefined.");
         })();
 
@@ -121,8 +107,8 @@ class StreamLabsService {
     }
 
     private async setTokens(accountIds: AccountIds, oauthTokens: OauthTokens, socketToken: SocketToken): Promise<StreamLabs> {
-        const twitchId: IdView = await twitchRepository.getOrInsertTwitchId(accountIds.twitch);
-        const streamLabsId: IdView = await streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs, twitchId.id);
+        const twitchId: IdView = await twitchRepository.getOrInsertTwitchId(accountIds.twitch.toString());
+        const streamLabsId: IdView = await streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs.toString(), twitchId.id);
 
         return await streamLabsRepository.updateTokens(streamLabsId.id, oauthTokens.accessToken, oauthTokens.refreshToken, socketToken.socketToken);
     }
