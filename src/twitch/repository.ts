@@ -44,7 +44,7 @@ class TwitchRepository {
             });
     }
 
-    public async updateTokens(id: number, accessToken: string, refreshToken: string): Promise<Twitch> {
+    public async updateTokens(id: number, accessToken?: string, refreshToken?: string): Promise<Twitch> {
         return prisma.twitch
             .update({
                 where: {

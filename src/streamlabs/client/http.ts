@@ -39,7 +39,7 @@ class StreamLabsHttpClient {
     }
 
     public getSocketToken(): Promise<AxiosResponse<SocketTokenResponse>> {
-        const config: {} = {
+        const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
             }
@@ -49,7 +49,7 @@ class StreamLabsHttpClient {
     }
 
     public getUser(): Promise<AxiosResponse<UserResponse>> {
-        const config: {} = {
+        const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
             }
@@ -59,7 +59,7 @@ class StreamLabsHttpClient {
     }
 
     public getDonations(): Promise<AxiosResponse<DonationListResponse>> {
-        const config: {} = {
+        const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
             }
@@ -69,7 +69,7 @@ class StreamLabsHttpClient {
     }
 
     public createDonation(body: DonationRequest): Promise<AxiosResponse<DonationResponse>> {
-        const config: {} = {
+        const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
             }

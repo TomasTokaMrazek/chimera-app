@@ -1,6 +1,6 @@
 export interface OauthTokens {
-    accessToken: string;
-    refreshToken: string;
+    accessToken?: string;
+    refreshToken?: string;
 }
 
 export interface AccountIds {
