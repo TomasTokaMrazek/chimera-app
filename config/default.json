@@ -3,11 +3,20 @@
         "url": "https://chimera-app.tomastokamrazek.cz",
         "port": 3000
     },
+    "twitch": {
+        "oauthUrl": "https://id.twitch.tv/oauth2",
+        "apiUrl": "https://api.twitch.tv/helix",
+        "websocketUrl": "wss://eventsub.wss.twitch.tv/ws",
+        "redirectUrl": "https://chimera-app.tomastokamrazek.cz/twitch/oauth/callback"
+    },
     "streamElements": {
+        "oauthUrl": "https://api.streamelements.com/oauth2",
         "apiUrl": "https://api.streamelements.com/kappa/v2",
-        "websocketUrl": "https://realtime.streamelements.com"
+        "websocketUrl": "https://realtime.streamelements.com",
+        "redirectUrl": "https://chimera-app.tomastokamrazek.cz/streamelements/oauth/callback"
     },
     "streamLabs": {
+        "oauthUrl": "https://streamlabs.com/api/v2.0",
         "apiUrl": "https://streamlabs.com/api/v2.0",
         "websocketUrl": "https://sockets.streamlabs.com",
         "redirectUrl": "https://chimera-app.tomastokamrazek.cz/streamlabs/oauth/callback"

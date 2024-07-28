@@ -65,8 +65,11 @@ class StreamElementsService {
     }
 
     private async setTokens(accountIds: AccountIds, jwt: string): Promise<StreamElements> {
-        const twitchId: IdView = await twitchRepository.getOrInsertTwitchId(accountIds.twitch);
-        const streamElementsId: IdView = await streamElementsRepository.getOrCreateStreamElementsId(accountIds.streamElements, twitchId.id);
+        const userView: UserView = await twitchRepository.getOrInsertByTwitchId(accountIds.twitch);
+        const twitchId: number = userView.user?.twitch_id ??( (): number => {
+            throw new Error("Twitch Account ID is undefined.");
+        })();
+        const streamElementsId: IdView = await streamElementsRepository.getOrCreateStreamElementsId(accountIds.streamElements, twitchId);
 
         return await streamElementsRepository.updateTokens(streamElementsId.id, jwt);
     }

@@ -16,12 +16,26 @@ interface App {
     port: number;
 }
 
-interface StreamElements {
+interface Twitch {
+    oauthUrl: string;
     apiUrl: string;
     websocketUrl: string;
+    redirectUrl: string;
+    clientId: string;
+    clientSecret: string;
+}
+
+interface StreamElements {
+    oauthUrl: string;
+    apiUrl: string;
+    websocketUrl: string;
+    redirectUrl: string;
+    clientId: string;
+    clientSecret: string;
 }
 
 interface StreamLabs {
+    oauthUrl: string;
     apiUrl: string;
     websocketUrl: string;
     redirectUrl: string;
@@ -31,6 +45,7 @@ interface StreamLabs {
 
 interface Configuration {
     app: App;
+    twitch: Twitch;
     streamElements: StreamElements;
     streamLabs: StreamLabs;
 }
@@ -40,12 +55,27 @@ const app: App = {
     port: config.get("app.port")
 };
 
+const twitch: Twitch = {
+    oauthUrl: config.get("twitch.oauthUrl"),
+    apiUrl: config.get("twitch.apiUrl"),
+    websocketUrl: config.get("twitch.websocketUrl"),
+    redirectUrl: config.get("twitch.redirectUrl"),
+    clientId: getEnvVariable("TWITCH_CLIENT_ID"),
+    clientSecret: getEnvVariable("TWITCH_CLIENT_SECRET")
+};
+
+
 const streamElements: StreamElements = {
+    oauthUrl: config.get("streamElements.oauthUrl"),
     apiUrl: config.get("streamElements.apiUrl"),
-    websocketUrl: config.get("streamElements.websocketUrl")
+    websocketUrl: config.get("streamElements.websocketUrl"),
+    redirectUrl: config.get("streamElements.redirectUrl"),
+    clientId: getEnvVariable("STREAMELEMENTS_CLIENT_ID"),
+    clientSecret: getEnvVariable("STREAMELEMENTS_CLIENT_SECRET")
 };
 
 const streamLabs: StreamLabs = {
+    oauthUrl: config.get("streamLabs.oauthUrl"),
     apiUrl: config.get("streamLabs.apiUrl"),
     websocketUrl: config.get("streamLabs.websocketUrl"),
     redirectUrl: config.get("streamLabs.redirectUrl"),
@@ -55,6 +85,7 @@ const streamLabs: StreamLabs = {
 
 const configuration: Configuration = {
     app: app,
+    twitch: twitch,
     streamElements: streamElements,
     streamLabs: streamLabs
 };

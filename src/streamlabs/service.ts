@@ -12,7 +12,7 @@ import StreamLabsSocketClient from "./client/socket";
 
 import configuration from "../configuration";
 
-const streamLabsApiUrl: string = configuration.streamLabs.apiUrl;
+const streamLabsOauthUrl: string = configuration.streamLabs.oauthUrl;
 const redirectUri: string = configuration.streamLabs.redirectUrl;
 const clientID: string = configuration.streamLabs.clientId;
 
@@ -22,7 +22,7 @@ class StreamLabsService {
     private socketClients: Map<number, StreamLabsSocketClient> = new Map();
 
     public async login(): Promise<URL> {
-        const url: URL = new URL(streamLabsApiUrl + "/authorize");
+        const url: URL = new URL(streamLabsOauthUrl + "/authorize");
         url.searchParams.append("response_type", "code");
         url.searchParams.append("client_id", clientID);
         url.searchParams.append("redirect_uri", redirectUri);
@@ -107,14 +107,17 @@ class StreamLabsService {
         })();
 
         return {
-            twitch: twitchAccountId,
-            streamLabs: streamLabsAccountId
+            twitch: twitchAccountId.toString(),
+            streamLabs: streamLabsAccountId.toString()
         };
     }
 
     private async setTokens(accountIds: AccountIds, oauthTokens: OauthTokens, socketToken: SocketToken): Promise<StreamLabs> {
-        const twitchId: IdView = await twitchRepository.getOrInsertTwitchId(accountIds.twitch.toString());
-        const streamLabsId: IdView = await streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs.toString(), twitchId.id);
+        const userView: UserView = await twitchRepository.getOrInsertByTwitchId(accountIds.twitch);
+        const twitchId: number = userView.user?.twitch_id ??( (): number => {
+            throw new Error("Twitch Account ID is undefined.");
+        })();
+        const streamLabsId: IdView = await streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs, twitchId);
 
         return await streamLabsRepository.updateTokens(streamLabsId.id, oauthTokens.accessToken, oauthTokens.refreshToken, socketToken.socketToken);
     }

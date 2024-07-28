@@ -3,6 +3,7 @@ import express, {Express, Request, Response} from "express";
 import configuration from "./configuration";
 
 import applicationRouter from "./application/routes";
+import twitchRoutes from "./twitch/routes";
 import streamElementsRoutes from "./streamelements/routes";
 import streamLabsRoutes from "./streamlabs/routes";
 
@@ -12,6 +13,7 @@ const port: number = configuration.app.port;
 app.use(express.json());
 
 app.use("/application", applicationRouter);
+app.use("/twitch", twitchRoutes);
 app.use("/streamelements", streamElementsRoutes);
 app.use("/streamlabs", streamLabsRoutes);
 
