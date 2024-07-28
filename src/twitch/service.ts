@@ -88,7 +88,7 @@ class TwitchService {
 
     private async setTokens(accountIds: AccountIds, oauthTokens: OauthTokens): Promise<Twitch> {
         const userView: UserView = await twitchRepository.getUser(accountIds.twitch);
-        const twitchId: number = userView.user?.twitch_id ??( (): number => {
+        const twitchId: number = userView.user?.twitch_id ?? ((): number => {
             throw new Error("Twitch Account ID is undefined.");
         })();
 

@@ -1,5 +1,5 @@
 import prisma from "../prisma";
-import {StreamLabs, Twitch} from "@prisma/client";
+import {Twitch} from "@prisma/client";
 import {UserView} from "../views";
 
 class TwitchRepository {
