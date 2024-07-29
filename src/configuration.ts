@@ -43,11 +43,17 @@ interface StreamLabs {
     clientSecret: string;
 }
 
+interface WheelOfNames {
+    apiUrl: string;
+    apiKey: string;
+}
+
 interface Configuration {
     app: App;
     twitch: Twitch;
     streamElements: StreamElements;
     streamLabs: StreamLabs;
+    wheelOfNames: WheelOfNames;
 }
 
 const app: App = {
@@ -83,11 +89,17 @@ const streamLabs: StreamLabs = {
     clientSecret: getEnvVariable("STREAMLABS_CLIENT_SECRET")
 };
 
+const wheelOfNames: WheelOfNames = {
+    apiUrl: config.get("wheelOfNames.apiUrl"),
+    apiKey: getEnvVariable("WHEELOFNAMES_API_KEY")
+};
+
 const configuration: Configuration = {
     app: app,
     twitch: twitch,
     streamElements: streamElements,
-    streamLabs: streamLabs
+    streamLabs: streamLabs,
+    wheelOfNames: wheelOfNames
 };
 
 export default configuration;

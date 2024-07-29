@@ -20,5 +20,8 @@
         "apiUrl": "https://streamlabs.com/api/v2.0",
         "websocketUrl": "https://sockets.streamlabs.com",
         "redirectUrl": "https://chimera-app.tomastokamrazek.cz/streamlabs/oauth/callback"
+    },
+    "wheelOfNames": {
+        "apiUrl": "https://wheelofnames.com/api/v1"
     }
 }
