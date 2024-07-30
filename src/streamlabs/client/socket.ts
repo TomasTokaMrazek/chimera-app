@@ -29,7 +29,7 @@ class StreamLabsSocketClient {
 
         socket.on("event", (event: TipEvent): void => {
             switch (event.type) {
-                case "tip": {
+                case "donation": {
                     Promise.all(event.message.map(async (message: TipEventMessage): Promise<void[]> => {
                         const donation: Donation = {
                             username: message.name,
