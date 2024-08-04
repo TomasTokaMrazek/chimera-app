@@ -13,6 +13,15 @@ class TwitchRepository {
             });
     }
 
+    public async getByAccountId(accountId: string): Promise<Twitch> {
+        return prisma.twitch
+            .findUniqueOrThrow({
+                where: {
+                    account_id: accountId
+                }
+            });
+    }
+
     public async getUser(accountId: string): Promise<UserView> {
         return prisma.twitch
             .findUniqueOrThrow({
@@ -25,7 +34,7 @@ class TwitchRepository {
             });
     }
 
-    public async getOrInsertByTwitchId(accountId: string): Promise<UserView> {
+    public async getOrInsertByAccountId(accountId: string): Promise<Twitch> {
         return prisma.twitch
             .upsert({
                 where: {
@@ -37,10 +46,7 @@ class TwitchRepository {
                         create: {}
                     }
                 },
-                update: {},
-                select: {
-                    user: true
-                }
+                update: {}
             });
     }
 

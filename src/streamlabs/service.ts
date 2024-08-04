@@ -1,7 +1,7 @@
 import {AxiosResponse} from "../axios";
 import {IdView, UserView} from "../views";
 
-import {User} from "@prisma/client";
+import {Twitch, User} from "@prisma/client";
 import streamLabsRepository, {StreamLabs} from "./repository";
 import twitchRepository from "../twitch/repository";
 
@@ -13,7 +13,7 @@ import StreamLabsSocketClient from "./client/socket";
 import configuration from "../configuration";
 
 const streamLabsOauthUrl: string = configuration.streamLabs.oauthUrl;
-const redirectUri: string = configuration.streamLabs.redirectUrl;
+const redirectUri: string = configuration.streamLabs.redirectUri;
 const clientID: string = configuration.streamLabs.clientId;
 
 class StreamLabsService {
@@ -113,11 +113,8 @@ class StreamLabsService {
     }
 
     private async setTokens(accountIds: AccountIds, oauthTokens: OauthTokens, socketToken: SocketToken): Promise<StreamLabs> {
-        const userView: UserView = await twitchRepository.getOrInsertByTwitchId(accountIds.twitch);
-        const twitchId: number = userView.user?.twitch_id ??( (): number => {
-            throw new Error("Twitch Account ID is undefined.");
-        })();
-        const streamLabsId: IdView = await streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs, twitchId);
+        const twitch: Twitch = await twitchRepository.getOrInsertByAccountId(accountIds.twitch);
+        const streamLabsId: IdView = await streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs, twitch.id);
 
         return await streamLabsRepository.updateTokens(streamLabsId.id, oauthTokens.accessToken, oauthTokens.refreshToken, socketToken.socketToken);
     }

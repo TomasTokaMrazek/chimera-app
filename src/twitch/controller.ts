@@ -23,15 +23,6 @@ class TwitchController {
         }
     }
 
-    public async connect(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try {
-            const twitchAccountId: string = req.body.twitchAccountId as string;
-            await twitchService.connect(twitchAccountId);
-            res.redirect("/success");
-        } catch (error) {
-            next(error);
-        }
-    }
 }
 
 export default new TwitchController();

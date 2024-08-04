@@ -3,7 +3,7 @@ import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../../axios";
 import configuration from "../../configuration";
 
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;
-const redirectUri: string = configuration.twitch.redirectUrl;
+const redirectUri: string = configuration.twitch.redirectUri;
 const clientID: string = configuration.twitch.clientId;
 const clientSecret: string = configuration.twitch.clientSecret;
 
@@ -21,7 +21,7 @@ class TwitchHttpClient {
 
     public getOauthTokenByCode(authorizationCode: string): Promise<AxiosResponse<TokenResponse>> {
         const config: AxiosRequestConfig = {
-            validateStatus: status => {
+            validateStatus: (status: number): boolean => {
                 return status < 500;
             },
             headers: {
@@ -42,7 +42,7 @@ class TwitchHttpClient {
 
     public getOauthTokenByRefresh(refreshToken: string): Promise<AxiosResponse<TokenResponse>> {
         const config: AxiosRequestConfig = {
-            validateStatus: status => {
+            validateStatus: (status: number): boolean => {
                 return status < 500;
             },
             headers: {
@@ -64,7 +64,7 @@ class TwitchHttpClient {
 
     public getOauthTokenValidation(): Promise<AxiosResponse<TokenValidationResponse>> {
         const config: AxiosRequestConfig = {
-            validateStatus: status => {
+            validateStatus: (status: number): boolean => {
                 return status < 500;
             },
             headers: {
@@ -77,7 +77,7 @@ class TwitchHttpClient {
 
     public getOauthUser(): Promise<AxiosResponse<UserResponse>> {
         const config: AxiosRequestConfig = {
-            validateStatus: status => {
+            validateStatus: (status: number): boolean => {
                 return status < 500;
             },
             headers: {

@@ -20,7 +20,7 @@ interface Twitch {
     oauthUrl: string;
     apiUrl: string;
     websocketUrl: string;
-    redirectUrl: string;
+    redirectUri: string;
     clientId: string;
     clientSecret: string;
 }
@@ -29,7 +29,7 @@ interface StreamElements {
     oauthUrl: string;
     apiUrl: string;
     websocketUrl: string;
-    redirectUrl: string;
+    redirectUri: string;
     clientId: string;
     clientSecret: string;
 }
@@ -38,7 +38,7 @@ interface StreamLabs {
     oauthUrl: string;
     apiUrl: string;
     websocketUrl: string;
-    redirectUrl: string;
+    redirectUri: string;
     clientId: string;
     clientSecret: string;
 }
@@ -65,7 +65,7 @@ const twitch: Twitch = {
     oauthUrl: config.get("twitch.oauthUrl"),
     apiUrl: config.get("twitch.apiUrl"),
     websocketUrl: config.get("twitch.websocketUrl"),
-    redirectUrl: config.get("twitch.redirectUrl"),
+    redirectUri: config.get("twitch.redirectUri"),
     clientId: getEnvVariable("TWITCH_CLIENT_ID"),
     clientSecret: getEnvVariable("TWITCH_CLIENT_SECRET")
 };
@@ -75,7 +75,7 @@ const streamElements: StreamElements = {
     oauthUrl: config.get("streamElements.oauthUrl"),
     apiUrl: config.get("streamElements.apiUrl"),
     websocketUrl: config.get("streamElements.websocketUrl"),
-    redirectUrl: config.get("streamElements.redirectUrl"),
+    redirectUri: config.get("streamElements.redirectUri"),
     clientId: getEnvVariable("STREAMELEMENTS_CLIENT_ID"),
     clientSecret: getEnvVariable("STREAMELEMENTS_CLIENT_SECRET")
 };
@@ -84,7 +84,7 @@ const streamLabs: StreamLabs = {
     oauthUrl: config.get("streamLabs.oauthUrl"),
     apiUrl: config.get("streamLabs.apiUrl"),
     websocketUrl: config.get("streamLabs.websocketUrl"),
-    redirectUrl: config.get("streamLabs.redirectUrl"),
+    redirectUri: config.get("streamLabs.redirectUri"),
     clientId: getEnvVariable("STREAMLABS_CLIENT_ID"),
     clientSecret: getEnvVariable("STREAMLABS_CLIENT_SECRET")
 };

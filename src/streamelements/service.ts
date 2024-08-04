@@ -1,7 +1,7 @@
 import {AxiosResponse} from "../axios";
 import {IdView, UserView} from "../views";
 
-import {User} from "@prisma/client";
+import {Twitch, User} from "@prisma/client";
 import streamElementsRepository, {StreamElements} from "./repository";
 import twitchRepository from "../twitch/repository";
 
@@ -65,11 +65,8 @@ class StreamElementsService {
     }
 
     private async setTokens(accountIds: AccountIds, jwt: string): Promise<StreamElements> {
-        const userView: UserView = await twitchRepository.getOrInsertByTwitchId(accountIds.twitch);
-        const twitchId: number = userView.user?.twitch_id ??( (): number => {
-            throw new Error("Twitch Account ID is undefined.");
-        })();
-        const streamElementsId: IdView = await streamElementsRepository.getOrCreateStreamElementsId(accountIds.streamElements, twitchId);
+        const twitch: Twitch = await twitchRepository.getOrInsertByAccountId(accountIds.twitch);
+        const streamElementsId: IdView = await streamElementsRepository.getOrCreateStreamElementsId(accountIds.streamElements, twitch.id);
 
         return await streamElementsRepository.updateTokens(streamElementsId.id, jwt);
     }

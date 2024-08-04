@@ -4,7 +4,7 @@ import configuration from "../../configuration";
 
 const streamLabsApiUrl: string = configuration.streamLabs.apiUrl;
 
-const redirectUri: string = configuration.streamLabs.redirectUrl;
+const redirectUri: string = configuration.streamLabs.redirectUri;
 const clientID: string = configuration.streamLabs.clientId;
 const clientSecret: string = configuration.streamLabs.clientSecret;
 

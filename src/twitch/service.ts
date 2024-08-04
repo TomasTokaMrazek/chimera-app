@@ -1,19 +1,19 @@
 import {AxiosResponse} from "../axios";
-import {UserView} from "../views";
 
-import {User} from "@prisma/client";
 import twitchRepository, {Twitch} from "./repository";
 
 import {AccountIds, OauthTokens} from "./types";
 
 import TwitchHttpClient, {TokenResponse, TokenValidationResponse, UserResponse} from "./client/http";
 
+import TTLCache from "@isaacs/ttlcache";
 import {CronJob} from "cron";
 
 import configuration from "../configuration";
+import {Duration} from "luxon";
 
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;
-const redirectUri: string = configuration.twitch.redirectUrl;
+const redirectUri: string = configuration.twitch.redirectUri;
 const clientID: string = configuration.twitch.clientId;
 
 class TwitchService {
@@ -21,11 +21,11 @@ class TwitchService {
     private cronJob: CronJob;
 
     constructor() {
-        this.cronJob = new CronJob("* 0 * * * *", async (): Promise<void> => {
+        this.cronJob = new CronJob("* * 0 * * *", async (): Promise<void> => {
             try {
                 console.log("Cron Job - start");
-                await Promise.all(Array.from(this.httpClients.keys()).map(async (twitchId): Promise<void> => {
-                    return await this.validateAccessToken(twitchId);
+                await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]): Promise<void> => {
+                    return await this.validateAccessToken(twitchId, accessToken);
                 }));
                 console.log("Cron Job - end");
             } catch (e) {
@@ -34,7 +34,10 @@ class TwitchService {
         }, null, true);
     }
 
-    private httpClients: Map<number, TwitchHttpClient> = new Map();
+    private tokenCache: TTLCache<number, string> = new TTLCache({
+        ttl: Duration.fromObject({days: 1}).milliseconds,
+        updateAgeOnGet: true
+    });
 
     public async login(): Promise<URL> {
         const url: URL = new URL(twitchOauthUrl + "/authorize");
@@ -51,44 +54,30 @@ class TwitchService {
             throw new Error(`Twitch Account Access Token is undefined.`);
         })();
         const accountIds: AccountIds = await this.getAccountIds(accessToken);
-        await this.setTokens(accountIds, oauthTokens);
-        await this.connect(accountIds.twitch.toString());
+        const twitch: Twitch = await twitchRepository.getOrInsertByAccountId(accountIds.twitch);
+        await twitchRepository.updateTokens(twitch.id, oauthTokens.accessToken, oauthTokens.refreshToken);
     }
 
-    public async connect(twitchAccountId: string): Promise<void> {
-        const userView: UserView = await twitchRepository.getOrInsertByTwitchId(twitchAccountId);
-        const user: User = userView.user ?? ((): User => {
-            throw new Error(`Twitch Account '${twitchAccountId}' is not associated with User.`);
+    public async getHttpClient(twitchId: number): Promise<TwitchHttpClient> {
+        const accessToken: string = this.tokenCache.get(twitchId) ?? await (async (): Promise<string> => {
+            const twitch: Twitch = await twitchRepository.getById(twitchId)
+            const newAccessToken = twitch.access_token ?? ((): string => {
+                throw new Error(`Twitch ID '${twitchId}' does not have Access Token.`);
+            })();
+            this.tokenCache.set(twitchId, newAccessToken);
+            return newAccessToken;
         })();
-        const twitchId: number = user.twitch_id ?? ((): number => {
-            throw new Error(`Twitch Account '${twitchAccountId}' is not associated with Twitch account.`);
-        })();
-
-        const twitch: Twitch = await twitchRepository.getById(twitchId);
-        const accessToken: string = twitch.access_token ?? ((): string => {
-            throw new Error(`Twitch Account '${twitch.account_id}' does not have Authorization token`);
-        })();
-
-        const httpclient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
-        this.httpClients.set(twitchId, httpclient);
-
-        await this.validateAccessToken(twitchId);
-    }
-
-    public getHttpClient(userId: number): TwitchHttpClient {
-        return this.httpClients.get(userId) ?? ((): TwitchHttpClient => {
-            throw new Error("Twitch HTTP client is undefined.");
-        })();
+        return TwitchHttpClient.createInstance(accessToken);
     }
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
         const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance("");
         const oauthTokensResponse: AxiosResponse<TokenResponse> = await httpClient.getOauthTokenByCode(authorizationCode);
         const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
-            throw new Error("Access Token is undefined.");
+            throw new Error("Twitch Access Token is undefined.");
         })();
         const refreshToken: string = oauthTokensResponse.data.refresh_token ?? ((): string => {
-            throw new Error("Refresh Token is undefined.");
+            throw new Error("Twitch Refresh Token is undefined.");
         })();
 
         return {
@@ -109,42 +98,23 @@ class TwitchService {
         };
     }
 
-    private async setTokens(accountIds: AccountIds, oauthTokens: OauthTokens): Promise<Twitch> {
-        const userView: UserView = await twitchRepository.getUser(accountIds.twitch);
-        const twitchId: number = userView.user?.twitch_id ?? ((): number => {
-            throw new Error("Twitch Account ID is undefined.");
-        })();
-
-        return await twitchRepository.updateTokens(twitchId, oauthTokens.accessToken, oauthTokens.refreshToken);
-    }
-
-    private async validateAccessToken(twitchId: number): Promise<void> {
-        const httpClient = this.httpClients.get(twitchId) ?? ((): TwitchHttpClient => {
-            throw new Error(`Twitch ID '${twitchId}' does not have http client instance.`);
-        })();
+    private async validateAccessToken(twitchId: number, accessToken: string): Promise<void> {
+        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
         const validationResponse: AxiosResponse<TokenValidationResponse> = await httpClient.getOauthTokenValidation();
         if (validationResponse.status !== 200 || validationResponse.data.expires_in < 7200) {
             const twitch: Twitch = await twitchRepository.getById(twitchId);
-            const accountIds: AccountIds = {
-                twitch: twitch.account_id
-            }
             const refreshToken: string = twitch.refresh_token ?? ((): string => {
-                throw new Error(`Twitch ID '${twitch.id}' does not have Refresh Token`);
+                throw new Error(`Twitch ID '${twitchId}' does not have Refresh Token.`);
             })();
             const refreshResponse: AxiosResponse<TokenResponse> = await httpClient.getOauthTokenByRefresh(refreshToken);
             if (refreshResponse.status !== 200) {
-                const newOauthTokens: OauthTokens = {};
-                await this.setTokens(accountIds, newOauthTokens);
-                this.httpClients.delete(twitchId);
+                await twitchRepository.updateTokens(twitchId);
+                this.tokenCache.delete(twitchId);
             } else {
                 const newAccessToken: string = refreshResponse.data.access_token;
                 const newRefreshToken: string = refreshResponse.data.refresh_token;
-                const newOauthTokens: OauthTokens = {
-                    accessToken: newAccessToken,
-                    refreshToken: newRefreshToken
-                };
-                await this.setTokens(accountIds, newOauthTokens);
-                this.httpClients.set(twitchId, TwitchHttpClient.createInstance(newAccessToken));
+                await twitchRepository.updateTokens(twitchId, accessToken, newRefreshToken);
+                this.tokenCache.set(twitchId, newAccessToken);
             }
         }
     }
