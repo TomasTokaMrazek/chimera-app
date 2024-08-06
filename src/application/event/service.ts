@@ -8,7 +8,7 @@ import twitchRepository from "../../twitch/repository";
 class ApplicationEventService {
 
     public async enable(request: EventSyncRequestType): Promise<void> {
-        const userView: UserView = await twitchRepository.getUser(request.twitchAccountId);
+        const userView: UserView = await twitchRepository.getUserByAccountId(request.twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${request.twitchAccountId}' is not associated with User.`);
         })();
@@ -16,7 +16,7 @@ class ApplicationEventService {
     }
 
     public async disable(request: EventSyncRequestType): Promise<void> {
-        const userView: UserView = await twitchRepository.getUser(request.twitchAccountId);
+        const userView: UserView = await twitchRepository.getUserByAccountId(request.twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${request.twitchAccountId}' is not associated with User.`);
         })();
@@ -24,7 +24,7 @@ class ApplicationEventService {
     }
 
     public async get(twitchAccountId: string): Promise<EventSynchronization[]> {
-        const userView: UserView = await twitchRepository.getUser(twitchAccountId);
+        const userView: UserView = await twitchRepository.getUserByAccountId(twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${twitchAccountId}' is not associated with User.`);
         })();

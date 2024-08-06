@@ -7,12 +7,6 @@ const websocketUrl: string = configuration.streamElements.websocketUrl;
 
 class StreamElementsSocketClient {
 
-    private constructor(
-        private readonly socket: Socket,
-        private readonly user: User
-    ) {
-    }
-
     static createInstance(user: User, jwt: string): StreamElementsSocketClient {
         const socket: Socket = io(`${websocketUrl}`, {
             transports: ["websocket"]
@@ -38,7 +32,7 @@ class StreamElementsSocketClient {
             console.log(`[StreamElements] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
         });
 
-        return new StreamElementsSocketClient(socket, user);
+        return new StreamElementsSocketClient();
     }
 
 }

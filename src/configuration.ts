@@ -11,9 +11,16 @@ function getEnvVariable(name: string): string {
     return value;
 }
 
+interface Chatbot {
+    redirectUri: string;
+    userAccountId: string;
+    adminAccountId: string;
+}
+
 interface App {
     url: string;
     port: number;
+    chatbot: Chatbot;
 }
 
 interface Twitch {
@@ -56,9 +63,16 @@ interface Configuration {
     wheelOfNames: WheelOfNames;
 }
 
+const chatbot: Chatbot = {
+    redirectUri: config.get("app.chatbot.redirectUri"),
+    userAccountId: config.get("app.chatbot.userAccountId"),
+    adminAccountId: config.get("app.chatbot.adminAccountId")
+};
+
 const app: App = {
     url: config.get("app.url"),
-    port: config.get("app.port")
+    port: config.get("app.port"),
+    chatbot: chatbot
 };
 
 const twitch: Twitch = {

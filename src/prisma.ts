@@ -1,4 +1,4 @@
-import {PrismaClient} from "@prisma/client";
+import {Prisma, PrismaClient} from "@prisma/client";
 
 function prismaInstance(): PrismaClient {
     const instance = new PrismaClient({
@@ -10,8 +10,8 @@ function prismaInstance(): PrismaClient {
         ]
     });
 
-    instance.$on("query", async (e) => {
-        console.log(`${e.query} ${e.params}`);
+    instance.$on("query", async (event: Prisma.QueryEvent): Promise<void> => {
+        console.log(`${event.query} ${event.params}`);
     });
 
     return instance;

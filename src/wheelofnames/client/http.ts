@@ -1,8 +1,6 @@
 import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../../axios";
 
 import configuration from "../../configuration";
-import internal from "node:stream";
-import {TokenResponse} from "../../twitch/client/http";
 
 const wheelOfNamesApiUrl: string = configuration.wheelOfNames.apiUrl;
 const wheelOfNamesApiKey: string = configuration.wheelOfNames.apiKey;
@@ -11,7 +9,7 @@ class WheelOfNamesHttpClient {
 
     public getSavedWheels(queryParams: GetRequestQueryParams): Promise<AxiosResponse<GetResponse>> {
         const config: AxiosRequestConfig = {
-            validateStatus: status => {
+            validateStatus: (status: number): boolean => {
                 return status < 500;
             },
             headers: {
@@ -23,9 +21,9 @@ class WheelOfNamesHttpClient {
         return axiosInstance.get(`${wheelOfNamesApiUrl}/wheels/private`, config);
     }
 
-    public putSavedWheel(body: PutRequest):Promise<AxiosResponse<PutResponse>> {
+    public putSavedWheel(body: PutRequest): Promise<AxiosResponse<PutResponse>> {
         const config: AxiosRequestConfig = {
-            validateStatus: status => {
+            validateStatus: (status: number): boolean => {
                 return status < 500;
             },
             headers: {
@@ -36,9 +34,9 @@ class WheelOfNamesHttpClient {
         return axiosInstance.put(`${wheelOfNamesApiUrl}/wheels/private`, body, config);
     }
 
-    public deleteSavedWheel(body: DeleteRequest):Promise<AxiosResponse<void>> {
+    public deleteSavedWheel(body: DeleteRequest): Promise<AxiosResponse<void>> {
         const config: AxiosRequestConfig = {
-            validateStatus: status => {
+            validateStatus: (status: number): boolean => {
                 return status < 500;
             },
             headers: {
@@ -53,7 +51,7 @@ class WheelOfNamesHttpClient {
 }
 
 export interface GetRequestQueryParams {
-    lastCreated?: number
+    lastCreated?: number;
 }
 
 export interface GetResponse {
@@ -62,17 +60,17 @@ export interface GetResponse {
 }
 
 export interface PutRequest {
-    config: WheelConfig
+    config: WheelConfig;
 }
 
 export interface PutResponse {
     data: {
         path: string
-    }
+    };
 }
 
 export interface DeleteRequest {
-    title: string
+    title: string;
 }
 
 export interface Wheel {

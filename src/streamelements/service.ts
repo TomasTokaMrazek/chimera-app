@@ -22,7 +22,7 @@ class StreamElementsService {
     }
 
     public async connect(twitchAccountId: string): Promise<void> {
-        const userView: UserView = await twitchRepository.getUser(twitchAccountId);
+        const userView: UserView = await twitchRepository.getUserByAccountId(twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${twitchAccountId}' is not associated with User.`);
         })();

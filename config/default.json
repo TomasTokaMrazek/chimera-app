@@ -1,7 +1,12 @@
 {
     "app": {
         "url": "https://chimera-app.tomastokamrazek.cz",
-        "port": 3000
+        "port": 3000,
+        "chatbot": {
+            "redirectUri": "https://chimera-app.tomastokamrazek.cz/application/chatbot/oauth/callback",
+            "userAccountId": "1119298268",
+            "adminAccountId": "69887790"
+        }
     },
     "twitch": {
         "oauthUrl": "https://id.twitch.tv/oauth2",

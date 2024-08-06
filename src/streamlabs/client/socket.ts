@@ -9,12 +9,6 @@ const websocketUrl: string = configuration.streamLabs.websocketUrl;
 
 class StreamLabsSocketClient {
 
-    private constructor(
-        private readonly socket: Socket<ServerToClientEvents, any>,
-        private readonly user: User
-    ) {
-    }
-
     static createInstance(user: User, socketToken: string): StreamLabsSocketClient {
         const socket: Socket<ServerToClientEvents, any> = io(`${websocketUrl}?token=${socketToken}`, {
             transports: ["websocket"]
@@ -50,7 +44,7 @@ class StreamLabsSocketClient {
         socket.onAny((eventName, ...args: any[]): void => {
             console.log(`[StreamLabs] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
         });
-        return new StreamLabsSocketClient(socket, user);
+        return new StreamLabsSocketClient();
     }
 
 }

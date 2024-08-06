@@ -27,7 +27,7 @@ class StreamLabsHttpClient {
             }
         };
 
-        const data: TokenRequestParams = {
+        const params: TokenRequestParams = {
             "grant_type": "authorization_code",
             "code": authorizationCode,
             "redirect_uri": redirectUri,
@@ -35,7 +35,7 @@ class StreamLabsHttpClient {
             "client_secret": clientSecret
         };
 
-        return axiosInstance.post(`${streamLabsApiUrl}/token`, data, config);
+        return axiosInstance.post(`${streamLabsApiUrl}/token`, params, config);
     }
 
     public getSocketToken(): Promise<AxiosResponse<SocketTokenResponse>> {
@@ -75,7 +75,7 @@ class StreamLabsHttpClient {
             }
         };
 
-        return axiosInstance.post(`${streamLabsApiUrl}/donations`, config);
+        return axiosInstance.post(`${streamLabsApiUrl}/donations`, body, config);
     }
 
 }

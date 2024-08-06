@@ -1,26 +1,35 @@
-import {AxiosResponse} from "../axios";
+import {AxiosResponse} from "../../axios";
 
-import twitchRepository, {Twitch} from "./repository";
+import twitchHttpClientManager from "../../twitch/client/http/manager";
+import twitchSocketClientManager from "../../twitch/client/socket/manager";
+import twitchRepository, {Twitch} from "../../twitch/repository";
 
 import {AccountIds, OauthTokens} from "./types";
 
-import TwitchHttpClient from "./client/http/client";
-import {TokenCodeResponseBody, UserInfoResponseBody} from "./client/http/dto/token";
+import TwitchHttpClient from "../../twitch/client/http/client";
+import * as TokenDto from "../../twitch/client/http/dto/token";
+import * as EventSub from "../../twitch/client/http/dto/eventsub";
+import TwitchSocketClient from "../../twitch/client/socket/client";
+import * as SocketMessageDto from "../../twitch/client/socket/dto/message";
 
-import configuration from "../configuration";
+import configuration from "../../configuration";
+import {IdView} from "../../views";
 
+const twitchWebsocketUrl: string = configuration.twitch.websocketUrl;
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;
-const redirectUri: string = configuration.twitch.redirectUri;
 const clientID: string = configuration.twitch.clientId;
+const redirectUri: string = configuration.app.chatbot.redirectUri;
+const userAccountId: string = configuration.app.chatbot.userAccountId;
+const adminAccountId: string = configuration.app.chatbot.adminAccountId;
 
-class TwitchService {
+class ChatbotService {
 
     public async login(): Promise<URL> {
         const url: URL = new URL(twitchOauthUrl + "/authorize");
         url.searchParams.append("response_type", "code");
         url.searchParams.append("client_id", clientID);
         url.searchParams.append("redirect_uri", redirectUri);
-        url.searchParams.append("scope", "");
+        url.searchParams.append("scope", "user:read:chat user:write:chat");
         return url;
     }
 
@@ -30,13 +39,26 @@ class TwitchService {
             throw new Error(`Twitch Account Access Token is undefined.`);
         })();
         const accountIds: AccountIds = await this.getAccountIds(accessToken);
+        if (accountIds.twitch !== userAccountId) {
+            throw new Error(`Twitch Account not allowed.`);
+        }
         const twitch: Twitch = await twitchRepository.getOrInsertByAccountId(accountIds.twitch);
         await twitchRepository.updateTokens(twitch.id, oauthTokens.accessToken, oauthTokens.refreshToken);
     }
 
+    public async connect(): Promise<void> {
+        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
+        return twitchSocketClientManager.connectClient(idView.id, twitchWebsocketUrl);
+    }
+
+    public async disconnect(): Promise<void> {
+        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
+        return twitchSocketClientManager.disconnectClient(idView.id);
+    }
+
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
         const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance("");
-        const oauthTokensResponse: AxiosResponse<TokenCodeResponseBody> = await httpClient.getOauthTokenByCode(authorizationCode);
+        const oauthTokensResponse: AxiosResponse<TokenDto.TokenCodeResponseBody> = await httpClient.getOauthTokenByCode(authorizationCode);
         const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
             throw new Error("Twitch Access Token is undefined.");
         })();
@@ -52,7 +74,7 @@ class TwitchService {
 
     private async getAccountIds(accessToken: string): Promise<AccountIds> {
         const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
-        const userResponse: AxiosResponse<UserInfoResponseBody> = await httpClient.getOauthUser();
+        const userResponse: AxiosResponse<TokenDto.UserInfoResponseBody> = await httpClient.getOauthUser();
         const twitchAccountId: string = userResponse.data.sub ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");
         })();
@@ -64,4 +86,4 @@ class TwitchService {
 
 }
 
-export default new TwitchService();
+export default new ChatbotService();

@@ -1,6 +1,6 @@
 import prisma from "../prisma";
 import {Twitch} from "@prisma/client";
-import {UserView} from "../views";
+import {IdView, AccountIdView, UserView} from "../views";
 
 class TwitchRepository {
 
@@ -22,7 +22,31 @@ class TwitchRepository {
             });
     }
 
-    public async getUser(accountId: string): Promise<UserView> {
+    public async getIdByAccountId(accountId: string): Promise<IdView> {
+        return prisma.twitch
+            .findUniqueOrThrow({
+                where: {
+                    account_id: accountId
+                },
+                select: {
+                    id: true
+                }
+            });
+    }
+
+    public async getAccountIdById(id: number): Promise<AccountIdView> {
+        return prisma.twitch
+            .findUniqueOrThrow({
+                where: {
+                    id: id
+                },
+                select: {
+                    account_id: true
+                }
+            });
+    }
+
+    public async getUserByAccountId(accountId: string): Promise<UserView> {
         return prisma.twitch
             .findUniqueOrThrow({
                 where: {
