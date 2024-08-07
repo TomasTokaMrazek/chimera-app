@@ -1,6 +1,5 @@
 import {AxiosResponse} from "../../axios";
 
-import twitchHttpClientManager from "../../twitch/client/http/manager";
 import twitchSocketClientManager from "../../twitch/client/socket/manager";
 import twitchRepository, {Twitch} from "../../twitch/repository";
 
@@ -8,9 +7,8 @@ import {AccountIds, OauthTokens} from "./types";
 
 import TwitchHttpClient from "../../twitch/client/http/client";
 import * as TokenDto from "../../twitch/client/http/dto/token";
-import * as EventSub from "../../twitch/client/http/dto/eventsub";
-import TwitchSocketClient from "../../twitch/client/socket/client";
-import * as SocketMessageDto from "../../twitch/client/socket/dto/message";
+
+import agraelusService from "../agraelus/service";
 
 import configuration from "../../configuration";
 import {IdView} from "../../views";
@@ -20,7 +18,6 @@ const twitchOauthUrl: string = configuration.twitch.oauthUrl;
 const clientID: string = configuration.twitch.clientId;
 const redirectUri: string = configuration.app.chatbot.redirectUri;
 const userAccountId: string = configuration.app.chatbot.userAccountId;
-const adminAccountId: string = configuration.app.chatbot.adminAccountId;
 
 class ChatbotService {
 
@@ -48,7 +45,7 @@ class ChatbotService {
 
     public async connect(): Promise<void> {
         const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
-        return twitchSocketClientManager.connectClient(idView.id, twitchWebsocketUrl);
+        await twitchSocketClientManager.connectClient(idView.id, twitchWebsocketUrl);
     }
 
     public async disconnect(): Promise<void> {

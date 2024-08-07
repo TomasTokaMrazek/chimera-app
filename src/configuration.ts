@@ -51,6 +51,7 @@ interface StreamLabs {
 }
 
 interface WheelOfNames {
+    url: string,
     apiUrl: string;
     apiKey: string;
 }
@@ -104,6 +105,7 @@ const streamLabs: StreamLabs = {
 };
 
 const wheelOfNames: WheelOfNames = {
+    url: config.get("wheelOfNames.url"),
     apiUrl: config.get("wheelOfNames.apiUrl"),
     apiKey: getEnvVariable("WHEELOFNAMES_API_KEY")
 };

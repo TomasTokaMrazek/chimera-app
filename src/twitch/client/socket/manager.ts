@@ -1,6 +1,6 @@
 import * as Message from "./dto/message";
 import {WelcomeMessage} from "./dto/message";
-import twitchRepository from "../../repository";
+import twitchRepository, {Twitch} from "../../repository";
 import TwitchHttpClient from "../http/client";
 import twitchHttpClientManager from "../../client/http/manager";
 import * as EventSub from "../http/dto/eventsub";
@@ -97,10 +97,16 @@ class TwitchSocketClientManager {
         }));
 
         const client: TwitchSocketClient = this.socketClients.get(twitchId) ?? ((): TwitchSocketClient => {
-            throw new Error(`Twitch ID '${twitchId}' is undefined.`);
+            throw new Error(`Twitch ID '${twitchId}' does not have Socket Client.`);
         })();
         this.socketClients.delete(twitchId);
         return client.close();
+    }
+
+    public async getSocketClient(twitchId: number): Promise<TwitchSocketClient> {
+        return this.socketClients.get(twitchId) ?? ((): TwitchSocketClient => {
+            throw new Error(`Twitch ID '${twitchId}' does not have Socket Client.`);
+        })();
     }
 
     private async sessionWelcome(message: WelcomeMessage, twitchId: number, socket: WebSocket): Promise<void> {

@@ -1,4 +1,10 @@
 import WebSocket from "ws";
+import * as EventSub from "../http/dto/eventsub";
+import TwitchHttpClient from "../http/client";
+import twitchHttpClientManager from "../http/manager";
+import {AxiosResponse} from "../../../axios";
+
+export type HandleMessageFunction = (this: WebSocket, data: WebSocket.RawData, isBinary: boolean) => void;
 
 class TwitchSocketClient {
 
@@ -11,15 +17,33 @@ class TwitchSocketClient {
         return this._sessionId;
     }
 
-    public async subscribe(): Promise<void> {
+    public async subscribe(twitchId: number, body: EventSub.CreateEventSubSubscriptionRequestBody, handleMessage: HandleMessageFunction): Promise<string> {
         if (await this.isOpen()) {
-            // TODO: Subscribe method
+            const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(twitchId);
+            const response: AxiosResponse<EventSub.CreateEventSubSubscriptionResponseBody> = await httpClient.createEventSubSubscription(body);
+            if (response.status !== 202) {
+                throw new Error(`Twitch Socket Session ID '${this._sessionId}' was unable to subscribe to event.`);
+            }
+
+            this._socket.on("message", handleMessage);
+
+            return response.data.data[0].id;
+        } else {
+            throw new Error(`Twitch Socket Session ID '${this._sessionId}' is not open.`);
         }
     }
 
-    public async ubsubscribe(): Promise<void> {
+    public async unsubscribe(twitchId: number, params: EventSub.DeleteEventSubSubscriptionRequestParams, handleMessage: HandleMessageFunction): Promise<void> {
         if (await this.isOpen()) {
-            // TODO: Unsubscribe method
+            const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(twitchId);
+            const response: AxiosResponse<void> = await httpClient.deleteEventSubSubscription(params);
+            if (response.status !== 204) {
+                throw new Error(`Twitch Socket Session ID '${this._sessionId}' was unable to unsubscribe to event.`);
+            }
+
+            this._socket.off("message", handleMessage);
+        } else {
+            throw new Error(`Twitch Socket Session ID '${this._sessionId}' is not open.`);
         }
     }
 

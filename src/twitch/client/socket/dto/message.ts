@@ -66,7 +66,6 @@ export interface ReconnectMessagePayloadSession {
 export interface NotificationMessage {
     metadata: NotificationMessageMetadata,
     payload: NotificationMessagePayload
-    event: object
 }
 
 export interface NotificationMessageMetadata {
@@ -78,7 +77,8 @@ export interface NotificationMessageMetadata {
 }
 
 export interface NotificationMessagePayload {
-    subscription: NotificationMessagePayloadSubscription;
+    subscription: NotificationMessagePayloadSubscription,
+    event: any
 }
 
 export interface NotificationMessagePayloadSubscription {

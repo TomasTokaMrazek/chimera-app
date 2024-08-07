@@ -27,6 +27,7 @@
         "redirectUri": "https://chimera-app.tomastokamrazek.cz/streamlabs/oauth/callback"
     },
     "wheelOfNames": {
+        "url": "https://wheelofnames.com",
         "apiUrl": "https://wheelofnames.com/api/v1"
     }
 }

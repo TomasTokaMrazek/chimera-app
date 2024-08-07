@@ -1,7 +1,9 @@
 import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../../../axios";
 
-import * as EventSub from "./dto/eventsub";
 import * as Token from "./dto/token";
+import * as EventSub from "./dto/eventsub";
+import * as User from "./dto/user";
+import * as Chat from "./dto/chat";
 
 import configuration from "../../../configuration";
 
@@ -21,7 +23,7 @@ class TwitchHttpClient {
         return new TwitchHttpClient(accessToken);
     }
 
-    public getOauthTokenByCode(authorizationCode: string): Promise<AxiosResponse<Token.TokenCodeResponseBody>> {
+    public async getOauthTokenByCode(authorizationCode: string): Promise<AxiosResponse<Token.TokenCodeResponseBody>> {
         const config: AxiosRequestConfig = {
             validateStatus: (status: number): boolean => {
                 return status < 500;
@@ -42,7 +44,7 @@ class TwitchHttpClient {
         return axiosInstance.post(`${twitchOauthUrl}/token`, body, config);
     }
 
-    public getOauthTokenByRefresh(refreshToken: string): Promise<AxiosResponse<Token.TokenRefreshResponseBody>> {
+    public async getOauthTokenByRefresh(refreshToken: string): Promise<AxiosResponse<Token.TokenRefreshResponseBody>> {
         const config: AxiosRequestConfig = {
             validateStatus: (status: number): boolean => {
                 return status < 500;
@@ -62,7 +64,7 @@ class TwitchHttpClient {
         return axiosInstance.post(`${twitchOauthUrl}/token`, data, config);
     }
 
-    public getOauthTokenValidation(): Promise<AxiosResponse<Token.TokenValidationResponseBody>> {
+    public async getOauthTokenValidation(): Promise<AxiosResponse<Token.TokenValidationResponseBody>> {
         const config: AxiosRequestConfig = {
             validateStatus: (status: number): boolean => {
                 return status < 500;
@@ -75,7 +77,7 @@ class TwitchHttpClient {
         return axiosInstance.get(`${twitchOauthUrl}/validate`, config);
     }
 
-    public getOauthUser(): Promise<AxiosResponse<Token.UserInfoResponseBody>> {
+    public async getOauthUser(): Promise<AxiosResponse<Token.UserInfoResponseBody>> {
         const config: AxiosRequestConfig = {
             validateStatus: (status: number): boolean => {
                 return status < 500;
@@ -88,7 +90,7 @@ class TwitchHttpClient {
         return axiosInstance.get(`${twitchOauthUrl}/userinfo`, config);
     }
 
-    public createEventSubSubscription(body: EventSub.CreateEventSubSubscriptionRequestBody): Promise<AxiosResponse<EventSub.CreateEventSubSubscriptionResponseBody>> {
+    public async createEventSubSubscription(body: EventSub.CreateEventSubSubscriptionRequestBody): Promise<AxiosResponse<EventSub.CreateEventSubSubscriptionResponseBody>> {
         const config: AxiosRequestConfig = {
             validateStatus: (status: number): boolean => {
                 return status < 500;
@@ -102,7 +104,7 @@ class TwitchHttpClient {
         return axiosInstance.post(`${twitchApiUrl}/eventsub/subscriptions`, body, config);
     }
 
-    public deleteEventSubSubscription(params: EventSub.DeleteEventSubSubscriptionRequestParams): Promise<AxiosResponse<void>> {
+    public async deleteEventSubSubscription(params: EventSub.DeleteEventSubSubscriptionRequestParams): Promise<AxiosResponse<void>> {
         const config: AxiosRequestConfig = {
             validateStatus: (status: number): boolean => {
                 return status < 500;
@@ -117,7 +119,7 @@ class TwitchHttpClient {
         return axiosInstance.delete(`${twitchApiUrl}/eventsub/subscriptions`, config);
     }
 
-    public getEventSubSubscription(params: EventSub.GetEventSubSubscriptionRequestParams): Promise<AxiosResponse<EventSub.GetEventSubSubscriptionResponseBody>> {
+    public async getEventSubSubscription(params: EventSub.GetEventSubSubscriptionRequestParams): Promise<AxiosResponse<EventSub.GetEventSubSubscriptionResponseBody>> {
         const config: AxiosRequestConfig = {
             validateStatus: (status: number): boolean => {
                 return status < 500;
@@ -130,6 +132,50 @@ class TwitchHttpClient {
         };
 
         return axiosInstance.get(`${twitchApiUrl}/eventsub/subscriptions`, config);
+    }
+
+    public async getUsers(params: User.GetUsersRequestParams): Promise<AxiosResponse<User.GetUsersResponseBody>> {
+        const config: AxiosRequestConfig = {
+            validateStatus: (status: number): boolean => {
+                return status < 500;
+            },
+            headers: {
+                "Authorization": `Bearer ${this.accessToken}`,
+                "Client-Id": clientID
+            },
+            params: params
+        };
+
+        return axiosInstance.get(`${twitchApiUrl}/users`, config);
+    }
+
+    public async getUsersChatColor(params: Chat.GetUsersChatColorRequestParams): Promise<AxiosResponse<Chat.GetUsersChatColorResponseBody>> {
+        const config: AxiosRequestConfig = {
+            validateStatus: (status: number): boolean => {
+                return status < 500;
+            },
+            headers: {
+                "Authorization": `Bearer ${this.accessToken}`,
+                "Client-Id": clientID
+            },
+            params: params
+        };
+
+        return axiosInstance.get(`${twitchApiUrl}/chat/color`, config);
+    }
+
+    public async sentChatMessage(body: Chat.SendChatMessageRequestBody): Promise<AxiosResponse<Chat.SendChatMessageResponseBody>> {
+        const config: AxiosRequestConfig = {
+            validateStatus: (status: number): boolean => {
+                return status < 500;
+            },
+            headers: {
+                "Authorization": `Bearer ${this.accessToken}`,
+                "Client-Id": clientID
+            }
+        };
+
+        return axiosInstance.post(`${twitchApiUrl}/chat/messages`, body, config);
     }
 
 }
