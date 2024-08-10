@@ -1,7 +1,7 @@
 import {AxiosResponse} from "@chimera/axios";
-
-import twitchRepository from "./repository";
 import {Twitch} from "@prisma/client";
+
+import twitchRepository from "./repository/repository";
 
 import {AccountIds, OauthTokens} from "./types";
 import TwitchHttpClient from "./client/http/client";

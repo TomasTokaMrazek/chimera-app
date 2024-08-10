@@ -6,7 +6,11 @@ import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
 import TwitchHttpClient from "@chimera/twitch/client/http/client";
 import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
 
-export type HandleMessageFunction = (this: WebSocket, data: WebSocket.RawData, isBinary: boolean) => void;
+export type HandleMessageFunction = (
+    this: WebSocket,
+    data: WebSocket.RawData,
+    isBinary: boolean
+) => void;
 
 class TwitchSocketClient {
 
@@ -40,7 +44,7 @@ class TwitchSocketClient {
             const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(twitchId);
             const response: AxiosResponse<void> = await httpClient.deleteEventSubSubscription(params);
             if (response.status !== 204) {
-                throw new Error(`Twitch Socket Session ID '${this._sessionId}' was unable to unsubscribe to event.`);
+                throw new Error(`Twitch Socket Session ID '${this._sessionId}' was unable to unsubscribe from event.`);
             }
 
             this._socket.off("message", handleMessage);

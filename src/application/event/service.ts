@@ -1,9 +1,11 @@
 import {EventSyncRequestType} from "./dto";
-import {UserView} from "../../views";
 
 import {EventSynchronization, User} from "@prisma/client";
+
+import twitchRepository from "@chimera/twitch/repository/repository";
+import {UserView} from "@chimera/twitch/repository/views";
+
 import applicationEventRepository from "./repository";
-import twitchRepository from "../../twitch/repository";
 
 class ApplicationEventService {
 

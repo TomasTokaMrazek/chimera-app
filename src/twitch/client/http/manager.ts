@@ -3,30 +3,26 @@ import {CronJob} from "cron";
 import {Duration} from "luxon";
 
 import {AxiosResponse} from "@chimera/axios";
-
-import twitchRepository from "@chimera/twitch/repository";
 import {Twitch} from "@prisma/client";
+
+import twitchRepository from "@chimera/twitch/repository/repository";
 
 import TwitchHttpClient from "./client";
 import * as Token from "./dto/token";
 
 class TwitchHttpClientManager {
 
-    private cronJob: CronJob;
-
-    constructor() {
-        this.cronJob = new CronJob("* 0 * * * *", async (): Promise<void> => {
-            try {
-                console.log("Cron Job - start");
-                await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]: [number, string]): Promise<void> => {
-                    return await this.validateAccessToken(twitchId, accessToken);
-                }));
-                console.log("Cron Job - end");
-            } catch (e) {
-                console.error(e);
-            }
-        }, null, true);
-    }
+    private cronJob: CronJob = new CronJob("0 0 * * * *", async (): Promise<void> => {
+        try {
+            console.log("Cron Job - start");
+            await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]: [number, string]): Promise<void> => {
+                return await this.validateAccessToken(twitchId, accessToken);
+            }));
+            console.log("Cron Job - end");
+        } catch (e) {
+            console.error(e);
+        }
+    }, null, true);
 
     private tokenCache: TTLCache<number, string> = new TTLCache({
         ttl: Duration.fromObject({days: 1}).as("milliseconds"),

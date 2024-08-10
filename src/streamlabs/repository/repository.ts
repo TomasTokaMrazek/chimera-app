@@ -1,7 +1,8 @@
 import prismaInstance from "@chimera/prisma";
 
 import {StreamLabs} from "@prisma/client";
-import {IdView} from "@chimera/views";
+
+import {IdView} from "./views";
 
 class StreamLabsRepository {
 

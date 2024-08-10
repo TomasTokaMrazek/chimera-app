@@ -1,8 +1,8 @@
 import {AxiosResponse} from "@chimera/axios";
-import {IdView} from "@chimera/views";
-
-import twitchRepository from "@chimera/twitch/repository";
 import {Twitch} from "@prisma/client";
+
+import twitchRepository from "@chimera/twitch/repository/repository";
+import {IdView} from "@chimera/twitch/repository/views";
 
 import TwitchHttpClient from "@chimera/twitch/client/http/client";
 import * as TokenDto from "@chimera/twitch/client/http/dto/token";

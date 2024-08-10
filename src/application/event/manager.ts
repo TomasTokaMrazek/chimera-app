@@ -1,12 +1,13 @@
+import {AxiosResponse} from "@chimera/axios";
+
+import applicationEventRepository from "./repository";
+import {EventSynchronization, User} from "@prisma/client";
+
+import streamElementsService from "@chimera/streamelements/service";
+import StreamElementsHttpClient from "@chimera/streamelements/client/http/client";
+import {CurrentUserChannel, TipRequest} from "@chimera/streamelements/client/http/dto";
+
 import {EventSyncService, EventSyncServiceType} from "./dto";
-
-import applicationEventRepository, {EventSynchronization} from "./repository";
-
-import streamElementsService from "../../streamelements/service";
-import streamElementsRepository from "../../streamelements/repository";
-import StreamElementsHttpClient, {CurrentUserChannel, TipRequest} from "@chimera/streamelements/client/http/http";
-import {StreamElements, User} from "@prisma/client";
-import {AxiosResponse} from "axios";
 
 class ApplicationEventManager {
 

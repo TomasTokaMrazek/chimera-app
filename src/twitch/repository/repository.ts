@@ -1,7 +1,8 @@
 import prismaInstance from "@chimera/prisma";
 
 import {Twitch} from "@prisma/client";
-import {IdView, AccountIdView, UserView} from "@chimera/views";
+
+import {IdView, AccountIdView, UserView} from "./views";
 
 class TwitchRepository {
 

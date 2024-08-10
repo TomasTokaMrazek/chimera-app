@@ -1,5 +1,7 @@
 import prisma from "@chimera/prisma";
+
 import {EventSynchronization} from "@prisma/client";
+
 import {EventSyncServiceType} from "./dto";
 
 class ApplicationEventRepository {
@@ -48,7 +50,5 @@ class ApplicationEventRepository {
     }
 
 }
-
-export {EventSynchronization};
 
 export default new ApplicationEventRepository();

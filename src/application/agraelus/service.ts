@@ -2,9 +2,9 @@ import WebSocket from "ws";
 import {DateTime, Duration} from "luxon";
 
 import {AxiosResponse} from "@chimera/axios";
-import {IdView} from "@chimera/views";
 
-import twitchRepository from "@chimera/twitch/repository";
+import twitchRepository from "@chimera/twitch/repository/repository";
+import {IdView} from "@chimera/twitch/repository/views";
 
 import twitchSocketClientManager from "@chimera/twitch/client/socket/manager";
 import TwitchSocketClient, {HandleMessageFunction} from "@chimera/twitch/client/socket/client";

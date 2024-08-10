@@ -1,6 +1,8 @@
 import prisma from "@chimera/prisma";
+
 import {StreamElements} from "@prisma/client";
-import {IdView} from "../views";
+
+import {IdView} from "./views";
 
 class StreamElementsRepository {
 

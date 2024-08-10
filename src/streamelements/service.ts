@@ -1,11 +1,12 @@
 import {AxiosResponse} from "@chimera/axios";
-import {IdView, UserView} from "@chimera/views";
 
-import twitchRepository from "@chimera/twitch/repository";
+import twitchRepository from "@chimera/twitch/repository/repository";
+import {UserView} from "@chimera/twitch/repository/views";
 import {Twitch, User, StreamElements} from "@prisma/client";
 
 import {AccountIds} from "./types";
-import streamElementsRepository from "./repository";
+import streamElementsRepository from "./repository/repository";
+import {IdView} from "./repository/views";
 
 import StreamElementsHttpClient from "./client/http/client";
 import * as HttpDto from "./client/http/dto";

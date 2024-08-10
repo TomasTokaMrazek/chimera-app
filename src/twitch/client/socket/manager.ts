@@ -2,9 +2,9 @@ import WebSocket, {RawData} from "ws";
 import {CronJob} from "cron";
 
 import {AxiosResponse} from "@chimera/axios";
-import {AccountIdView} from "@chimera/views";
 
-import twitchRepository from "@chimera/twitch/repository";
+import twitchRepository from "@chimera/twitch/repository/repository";
+import {AccountIdView} from "@chimera/twitch/repository/views";
 
 import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
 import TwitchHttpClient from "@chimera/twitch/client/http/client";
