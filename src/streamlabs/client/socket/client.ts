@@ -1,16 +1,20 @@
 import io, {Socket} from "socket.io-client";
 
-import configuration from "../../configuration";
-import eventManager, {Donation} from "../../application/event/manager";
-import {EventSyncService} from "../../application/event/dto";
+import eventManager, {Donation} from "@chimera/application/event/manager";
+import {EventSyncService} from "@chimera/application/event/dto";
+
 import {User} from "@prisma/client";
+
+import * as Dto from "./dto";
+
+import configuration from "@chimera/configuration";
 
 const websocketUrl: string = configuration.streamLabs.websocketUrl;
 
 class StreamLabsSocketClient {
 
     static createInstance(user: User, socketToken: string): StreamLabsSocketClient {
-        const socket: Socket<ServerToClientEvents, any> = io(`${websocketUrl}?token=${socketToken}`, {
+        const socket: Socket<Dto.ServerToClientEvents, any> = io(`${websocketUrl}?token=${socketToken}`, {
             transports: ["websocket"]
         });
         socket.on("connect", (): void => {
@@ -21,10 +25,10 @@ class StreamLabsSocketClient {
             console.log("[StreamLabs] Disconnected from the websocket server.");
         });
 
-        socket.on("event", (event: TipEvent): void => {
+        socket.on("event", (event: Dto.TipEvent): void => {
             switch (event.type) {
                 case "donation": {
-                    Promise.all(event.message.map(async (message: TipEventMessage): Promise<void[]> => {
+                    Promise.all(event.message.map(async (message: Dto.TipEventMessage): Promise<void[]> => {
                         const donation: Donation = {
                             username: message.name,
                             message: message.message,
@@ -47,25 +51,6 @@ class StreamLabsSocketClient {
         return new StreamLabsSocketClient();
     }
 
-}
-
-interface ServerToClientEvents {
-    event: (event: TipEvent) => void;
-}
-
-export interface TipEvent {
-    type: string;
-    message: any;
-    event_id: string;
-}
-
-export interface TipEventMessage {
-    id: number;
-    name: string;
-    currency: string;
-    amount: number;
-    formatted_amount: string;
-    message?: string;
 }
 
 export default StreamLabsSocketClient;

@@ -1,6 +1,8 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../../axios";
+import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "@chimera/axios";
 
-import configuration from "../../configuration";
+import * as Dto from "./dto";
+
+import configuration from "@chimera/configuration";
 
 const streamLabsApiUrl: string = configuration.streamLabs.apiUrl;
 
@@ -20,14 +22,14 @@ class StreamLabsHttpClient {
     }
 
 
-    public getOauthTokens(authorizationCode: string): Promise<AxiosResponse<TokenResponse>> {
+    public getOauthTokens(authorizationCode: string): Promise<AxiosResponse<Dto.TokenResponse>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
             }
         };
 
-        const params: TokenRequestParams = {
+        const params: Dto.TokenRequestParams = {
             "grant_type": "authorization_code",
             "code": authorizationCode,
             "redirect_uri": redirectUri,
@@ -38,7 +40,7 @@ class StreamLabsHttpClient {
         return axiosInstance.post(`${streamLabsApiUrl}/token`, params, config);
     }
 
-    public getSocketToken(): Promise<AxiosResponse<SocketTokenResponse>> {
+    public getSocketToken(): Promise<AxiosResponse<Dto.SocketTokenResponse>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
@@ -48,7 +50,7 @@ class StreamLabsHttpClient {
         return axiosInstance.get(`${streamLabsApiUrl}/socket/token`, config);
     }
 
-    public getUser(): Promise<AxiosResponse<UserResponse>> {
+    public getUser(): Promise<AxiosResponse<Dto.UserResponse>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
@@ -58,7 +60,7 @@ class StreamLabsHttpClient {
         return axiosInstance.get(`${streamLabsApiUrl}/user`, config);
     }
 
-    public getDonations(): Promise<AxiosResponse<DonationListResponse>> {
+    public getDonations(): Promise<AxiosResponse<Dto.DonationListResponse>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
@@ -68,7 +70,7 @@ class StreamLabsHttpClient {
         return axiosInstance.get(`${streamLabsApiUrl}/donations`, config);
     }
 
-    public createDonation(body: DonationRequest): Promise<AxiosResponse<DonationResponse>> {
+    public createDonation(body: Dto.DonationRequest): Promise<AxiosResponse<Dto.DonationResponse>> {
         const config: AxiosRequestConfig = {
             headers: {
                 "Authorization": `Bearer ${this.accessToken}`
@@ -78,62 +80,6 @@ class StreamLabsHttpClient {
         return axiosInstance.post(`${streamLabsApiUrl}/donations`, body, config);
     }
 
-}
-
-export interface TokenRequestParams {
-    grant_type: string,
-    code: string,
-    redirect_uri: string,
-    client_id: string,
-    client_secret: string
-}
-
-export interface TokenResponse {
-    access_token: string,
-    token_type: string,
-    expires_in: string,
-    refresh_token: string,
-    scope: string
-}
-
-export interface SocketTokenResponse {
-    socket_token: string;
-}
-
-export interface UserResponse {
-    streamlabs: User;
-    twitch: User;
-}
-
-export interface User {
-    id: number,
-    display_name: string
-}
-
-export interface DonationListResponse {
-    data: DonationList[];
-}
-
-export interface DonationList {
-    donation_id: number,
-    name: string,
-    message: string,
-    email: string
-    currency: string,
-    amount: string,
-    created_at: number
-}
-
-export interface DonationRequest {
-    name: string,
-    message: string,
-    identifier: string,
-    currency: string,
-    amount: number
-}
-
-export interface DonationResponse {
-    donation_id: number;
 }
 
 export default StreamLabsHttpClient;

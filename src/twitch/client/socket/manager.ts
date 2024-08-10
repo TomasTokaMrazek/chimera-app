@@ -1,14 +1,17 @@
-import * as Message from "./dto/message";
-import {WelcomeMessage} from "./dto/message";
-import twitchRepository, {Twitch} from "../../repository";
-import TwitchHttpClient from "../http/client";
-import twitchHttpClientManager from "../../client/http/manager";
-import * as EventSub from "../http/dto/eventsub";
-import {AxiosResponse} from "../../../axios";
-import TwitchSocketClient from "./client";
 import WebSocket, {RawData} from "ws";
 import {CronJob} from "cron";
-import {AccountIdView} from "../../../views";
+
+import {AxiosResponse} from "@chimera/axios";
+import {AccountIdView} from "@chimera/views";
+
+import twitchRepository from "@chimera/twitch/repository";
+
+import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
+import TwitchHttpClient from "@chimera/twitch/client/http/client";
+import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
+
+import TwitchSocketClient from "./client";
+import * as Message from "./dto/message";
 
 class TwitchSocketClientManager {
 
@@ -109,7 +112,7 @@ class TwitchSocketClientManager {
         })();
     }
 
-    private async sessionWelcome(message: WelcomeMessage, twitchId: number, socket: WebSocket): Promise<void> {
+    private async sessionWelcome(message: Message.WelcomeMessage, twitchId: number, socket: WebSocket): Promise<void> {
         const sessionId: string = message.payload.session.id;
 
         if (!this.socketClients.has(twitchId)) {

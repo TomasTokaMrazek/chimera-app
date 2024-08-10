@@ -1,8 +1,10 @@
 import WebSocket from "ws";
-import * as EventSub from "../http/dto/eventsub";
-import TwitchHttpClient from "../http/client";
-import twitchHttpClientManager from "../http/manager";
-import {AxiosResponse} from "../../../axios";
+
+import {AxiosResponse} from "@chimera/axios";
+
+import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
+import TwitchHttpClient from "@chimera/twitch/client/http/client";
+import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
 
 export type HandleMessageFunction = (this: WebSocket, data: WebSocket.RawData, isBinary: boolean) => void;
 

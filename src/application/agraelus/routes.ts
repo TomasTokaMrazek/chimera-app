@@ -1,4 +1,5 @@
 import express, {Router} from "express";
+
 import agraelusController from "./controller";
 
 const router: Router = express.Router();

@@ -1,21 +1,26 @@
-import twitchHttpClientManager from "../../twitch/client/http/manager";
-import twitchSocketClientManager from "../../twitch/client/socket/manager";
-import TwitchSocketClient, {HandleMessageFunction} from "../../twitch/client/socket/client";
-
-import twitchRepository from "../../twitch/repository";
 import WebSocket from "ws";
-import configuration from "../../configuration";
-import {IdView} from "../../views";
-import * as Message from "../../twitch/client/socket/dto/message";
 import {DateTime, Duration} from "luxon";
-import * as EventSub from "../../twitch/client/http/dto/eventsub";
-import * as User from "../../twitch/client/http/dto/user";
-import * as Chat from "../../twitch/client/http/dto/chat";
-import wheelOfNamesClient from "../../wheelofnames/client/http";
-import * as Wheel from "../../wheelofnames/client/dto";
-import {PostResponse} from "../../wheelofnames/client/dto";
-import {AxiosResponse} from "../../axios";
-import TwitchHttpClient from "../../twitch/client/http/client";
+
+import {AxiosResponse} from "@chimera/axios";
+import {IdView} from "@chimera/views";
+
+import twitchRepository from "@chimera/twitch/repository";
+
+import twitchSocketClientManager from "@chimera/twitch/client/socket/manager";
+import TwitchSocketClient, {HandleMessageFunction} from "@chimera/twitch/client/socket/client";
+import * as Message from "@chimera/twitch/client/socket/dto/message";
+import * as Event from "@chimera/twitch/client/socket/dto/event";
+
+import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
+import TwitchHttpClient from "@chimera/twitch/client/http/client";
+import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
+import * as User from "@chimera/twitch/client/http/dto/user";
+import * as Chat from "@chimera/twitch/client/http/dto/chat";
+
+import WheelOfNamesClient from "@chimera/wheelofnames/client/http/client";
+import * as Wheel from "@chimera/wheelofnames/client/http/dto";
+
+import configuration from "@chimera/configuration";
 
 const twitchWebsocketUrl: string = configuration.twitch.websocketUrl;
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;
@@ -28,6 +33,7 @@ const wheelOfNamesUrl: string = configuration.wheelOfNames.url;
 
 const cekybotUserId: string = "807488577"; //cekybot2
 const tokaUserId: string = "69887790"; //TokaTheFirst
+const agraelusUserId: string = "36620767" //Agraelus
 
 class AgraelusService {
 
@@ -35,7 +41,7 @@ class AgraelusService {
     private numberOfUsers: number = 0;
     private users: string[] = [];
 
-    private subscribeId: string = "";
+    private subscriptionId: string = "";
 
     private handleMessage: HandleMessageFunction = async (data: WebSocket.RawData): Promise<void> => {
         const parsedData = JSON.parse(data.toString());
@@ -43,8 +49,16 @@ class AgraelusService {
         switch (messageType) {
             case "notification": {
                 const message: Message.NotificationMessage = parsedData as Message.NotificationMessage;
-                const chatterUserId: string = message.payload.event.chatter_user_id;
-                const chatMessage: string = message.payload.event.message.text;
+                /*
+                if (message.payload.subscription.id !== this.subscriptionId) {
+                    return;
+                }
+
+                 */
+                const event: Event.ChannelChatMessage = message.payload.event as Event.ChannelChatMessage;
+
+                const chatterUserId: string = event.chatter_user_id;
+                const chatMessage: string = event.message.text;
                 if (chatterUserId === tokaUserId) {
                     if (this.firstMessage.isValid) {
                         const difference: Duration<any> = this.firstMessage.diffNow();
@@ -81,7 +95,7 @@ class AgraelusService {
                         const body: Chat.SendChatMessageRequestBody = {
                             broadcaster_id: userAccountId,
                             sender_id: userAccountId,
-                            message: url
+                            message: url + " <- agrTocka @Agraelus"
                         };
                         await httpClient.sentChatMessage(body);
                         this.reset();
@@ -93,7 +107,7 @@ class AgraelusService {
     };
 
     public async connect(): Promise<void> {
-        if (this.subscribeId.length > 0) {
+        if (this.subscriptionId.length > 0) {
             return;
         }
 
@@ -115,7 +129,7 @@ class AgraelusService {
             }
         };
 
-        this.subscribeId = await socketClient.subscribe(idView.id, requestBody, this.handleMessage);
+        this.subscriptionId = await socketClient.subscribe(idView.id, requestBody, this.handleMessage);
     }
 
     public async disconnect(): Promise<void> {
@@ -123,12 +137,12 @@ class AgraelusService {
         const socketClient: TwitchSocketClient = await twitchSocketClientManager.getSocketClient(idView.id);
 
         const requestParams: EventSub.DeleteEventSubSubscriptionRequestParams = {
-            id: this.subscribeId
+            id: this.subscriptionId
         };
 
         await socketClient.unsubscribe(idView.id, requestParams, this.handleMessage);
 
-        this.subscribeId = "";
+        this.subscriptionId = "";
     }
 
     private reset(): void {
@@ -190,7 +204,7 @@ class AgraelusService {
 
         const body: Wheel.PostRequest = {
             wheelConfig: {
-                description: "Točka pro agrBajs.",
+                description: "Točka pro agrBajs ze dne " + DateTime.now().toLocaleString(DateTime.DATE_FULL),
                 title: "Agraelus",
                 type: Wheel.Type.COLOR,
                 spinTime: 5,
@@ -199,12 +213,13 @@ class AgraelusService {
                 isAdvanced: true,
                 customPictureDataUri: "https://static-cdn.jtvnw.net/jtv_user_pictures/ea3d506d-0339-40e7-ae44-eb104d5a546b-profile_image-600x600.png",
                 pictureType: Wheel.PictureType.UPLOADED,
-                allowDuplicates: true
+                allowDuplicates: false
             },
             shareMode: Wheel.ShareMode.COPYABLE
         };
 
-        const response: AxiosResponse<PostResponse> = await wheelOfNamesClient.createSharedWheel(body);
+        const wheelOfNamesClient: WheelOfNamesClient = WheelOfNamesClient.createInstance();
+        const response: AxiosResponse<Wheel.PostResponse> = await wheelOfNamesClient.createSharedWheel(body);
         if (response.status !== 200) {
             throw new Error("Unable to create Wheel Of Names.");
         }

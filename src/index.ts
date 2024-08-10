@@ -1,11 +1,11 @@
 import express, {Express, Request, Response} from "express";
 
-import configuration from "./configuration";
+import configuration from "@chimera/configuration";
 
-import applicationRouter from "./application/routes";
-import twitchRoutes from "./twitch/routes";
-import streamElementsRoutes from "./streamelements/routes";
-import streamLabsRoutes from "./streamlabs/routes";
+import applicationRouter from "@chimera/application/routes";
+import twitchRoutes from "@chimera/twitch/routes";
+import streamElementsRoutes from "@chimera/streamelements/routes";
+import streamLabsRoutes from "@chimera/streamlabs/routes";
 
 const app: Express = express();
 const port: number = configuration.app.port;

@@ -1,4 +1,4 @@
-import prisma from "../../prisma";
+import prisma from "@chimera/prisma";
 import {EventSynchronization} from "@prisma/client";
 import {EventSyncServiceType} from "./dto";
 

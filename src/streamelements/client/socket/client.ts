@@ -1,6 +1,6 @@
 import io, {Socket} from "socket.io-client";
 
-import configuration from "../../configuration";
+import configuration from "@chimera/configuration";
 import {User} from "@prisma/client";
 
 const websocketUrl: string = configuration.streamElements.websocketUrl;

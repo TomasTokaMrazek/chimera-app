@@ -1,14 +1,17 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../../axios";
+import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "@chimera/axios";
 
 import * as Dto from "./dto";
 
-import configuration from "../../configuration";
-import {PostResponse} from "./dto";
+import configuration from "@chimera/configuration";
 
 const wheelOfNamesApiUrl: string = configuration.wheelOfNames.apiUrl;
 const wheelOfNamesApiKey: string = configuration.wheelOfNames.apiKey;
 
 class WheelOfNamesHttpClient {
+
+    static createInstance(): WheelOfNamesHttpClient {
+        return new WheelOfNamesHttpClient();
+    }
 
     public createSharedWheel(body: Dto.PostRequest): Promise<AxiosResponse<Dto.PostResponse>> {
         const config: AxiosRequestConfig = {
@@ -25,4 +28,4 @@ class WheelOfNamesHttpClient {
 
 }
 
-export default new WheelOfNamesHttpClient();
+export default WheelOfNamesHttpClient;

@@ -1,17 +1,17 @@
-import {AxiosResponse} from "../../axios";
+import {AxiosResponse} from "@chimera/axios";
+import {IdView} from "@chimera/views";
 
-import twitchSocketClientManager from "../../twitch/client/socket/manager";
-import twitchRepository, {Twitch} from "../../twitch/repository";
+import twitchRepository from "@chimera/twitch/repository";
+import {Twitch} from "@prisma/client";
+
+import TwitchHttpClient from "@chimera/twitch/client/http/client";
+import * as TokenDto from "@chimera/twitch/client/http/dto/token";
+
+import twitchSocketClientManager from "@chimera/twitch/client/socket/manager";
 
 import {AccountIds, OauthTokens} from "./types";
 
-import TwitchHttpClient from "../../twitch/client/http/client";
-import * as TokenDto from "../../twitch/client/http/dto/token";
-
-import agraelusService from "../agraelus/service";
-
-import configuration from "../../configuration";
-import {IdView} from "../../views";
+import configuration from "@chimera/configuration";
 
 const twitchWebsocketUrl: string = configuration.twitch.websocketUrl;
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;

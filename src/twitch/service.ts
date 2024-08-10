@@ -1,13 +1,13 @@
-import {AxiosResponse} from "../axios";
+import {AxiosResponse} from "@chimera/axios";
 
-import twitchRepository, {Twitch} from "./repository";
+import twitchRepository from "./repository";
+import {Twitch} from "@prisma/client";
 
 import {AccountIds, OauthTokens} from "./types";
-
 import TwitchHttpClient from "./client/http/client";
-import {TokenCodeResponseBody, UserInfoResponseBody} from "./client/http/dto/token";
+import * as Token from "./client/http/dto/token";
 
-import configuration from "../configuration";
+import configuration from "@chimera/configuration";
 
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;
 const redirectUri: string = configuration.twitch.redirectUri;
@@ -36,7 +36,7 @@ class TwitchService {
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
         const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance("");
-        const oauthTokensResponse: AxiosResponse<TokenCodeResponseBody> = await httpClient.getOauthTokenByCode(authorizationCode);
+        const oauthTokensResponse: AxiosResponse<Token.TokenCodeResponseBody> = await httpClient.getOauthTokenByCode(authorizationCode);
         const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
             throw new Error("Twitch Access Token is undefined.");
         })();
@@ -52,7 +52,7 @@ class TwitchService {
 
     private async getAccountIds(accessToken: string): Promise<AccountIds> {
         const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
-        const userResponse: AxiosResponse<UserInfoResponseBody> = await httpClient.getOauthUser();
+        const userResponse: AxiosResponse<Token.UserInfoResponseBody> = await httpClient.getOauthUser();
         const twitchAccountId: string = userResponse.data.sub ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");
         })();

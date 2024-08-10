@@ -4,7 +4,7 @@ import applicationEventRepository, {EventSynchronization} from "./repository";
 
 import streamElementsService from "../../streamelements/service";
 import streamElementsRepository from "../../streamelements/repository";
-import StreamElementsHttpClient, {CurrentUserChannel, TipRequest} from "../../streamelements/client/http";
+import StreamElementsHttpClient, {CurrentUserChannel, TipRequest} from "@chimera/streamelements/client/http/http";
 import {StreamElements, User} from "@prisma/client";
 import {AxiosResponse} from "axios";
 

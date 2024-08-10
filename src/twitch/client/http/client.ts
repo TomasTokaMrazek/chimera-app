@@ -1,11 +1,11 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "../../../axios";
+import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "@chimera/axios";
 
 import * as Token from "./dto/token";
 import * as EventSub from "./dto/eventsub";
 import * as User from "./dto/user";
 import * as Chat from "./dto/chat";
 
-import configuration from "../../../configuration";
+import configuration from "@chimera/configuration";
 
 const twitchApiUrl: string = configuration.twitch.apiUrl;
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;
@@ -180,4 +180,4 @@ class TwitchHttpClient {
 
 }
 
-export default TwitchHttpClient;
+export default TwitchHttpClient

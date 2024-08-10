@@ -1,11 +1,12 @@
-import prisma from "../prisma";
+import prismaInstance from "@chimera/prisma";
+
 import {Twitch} from "@prisma/client";
-import {IdView, AccountIdView, UserView} from "../views";
+import {IdView, AccountIdView, UserView} from "@chimera/views";
 
 class TwitchRepository {
 
     public async getById(id: number): Promise<Twitch> {
-        return prisma.twitch
+        return prismaInstance.twitch
             .findUniqueOrThrow({
                 where: {
                     id: id
@@ -14,7 +15,7 @@ class TwitchRepository {
     }
 
     public async getByAccountId(accountId: string): Promise<Twitch> {
-        return prisma.twitch
+        return prismaInstance.twitch
             .findUniqueOrThrow({
                 where: {
                     account_id: accountId
@@ -23,7 +24,7 @@ class TwitchRepository {
     }
 
     public async getIdByAccountId(accountId: string): Promise<IdView> {
-        return prisma.twitch
+        return prismaInstance.twitch
             .findUniqueOrThrow({
                 where: {
                     account_id: accountId
@@ -35,7 +36,7 @@ class TwitchRepository {
     }
 
     public async getAccountIdById(id: number): Promise<AccountIdView> {
-        return prisma.twitch
+        return prismaInstance.twitch
             .findUniqueOrThrow({
                 where: {
                     id: id
@@ -47,7 +48,7 @@ class TwitchRepository {
     }
 
     public async getUserByAccountId(accountId: string): Promise<UserView> {
-        return prisma.twitch
+        return prismaInstance.twitch
             .findUniqueOrThrow({
                 where: {
                     account_id: accountId
@@ -59,7 +60,7 @@ class TwitchRepository {
     }
 
     public async getOrInsertByAccountId(accountId: string): Promise<Twitch> {
-        return prisma.twitch
+        return prismaInstance.twitch
             .upsert({
                 where: {
                     account_id: accountId
@@ -75,7 +76,7 @@ class TwitchRepository {
     }
 
     public async updateTokens(id: number, accessToken?: string, refreshToken?: string): Promise<Twitch> {
-        return prisma.twitch
+        return prismaInstance.twitch
             .update({
                 where: {
                     id: id
@@ -88,7 +89,5 @@ class TwitchRepository {
     }
 
 }
-
-export {Twitch}
 
 export default new TwitchRepository();

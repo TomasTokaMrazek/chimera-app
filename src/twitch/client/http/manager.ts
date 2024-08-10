@@ -1,10 +1,14 @@
-import {CronJob} from "cron";
 import TTLCache from "@isaacs/ttlcache";
+import {CronJob} from "cron";
 import {Duration} from "luxon";
+
+import {AxiosResponse} from "@chimera/axios";
+
+import twitchRepository from "@chimera/twitch/repository";
+import {Twitch} from "@prisma/client";
+
 import TwitchHttpClient from "./client";
-import twitchRepository, {Twitch} from "../../repository";
-import {AxiosResponse} from "../../../axios";
-import {TokenRefreshResponseBody, TokenValidationResponseBody} from "./dto/token";
+import * as Token from "./dto/token";
 
 class TwitchHttpClientManager {
 
@@ -46,13 +50,13 @@ class TwitchHttpClientManager {
 
     private async validateAccessToken(twitchId: number, accessToken: string): Promise<void> {
         const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
-        const validationResponse: AxiosResponse<TokenValidationResponseBody> = await httpClient.getOauthTokenValidation();
+        const validationResponse: AxiosResponse<Token.TokenValidationResponseBody> = await httpClient.getOauthTokenValidation();
         if (validationResponse.status !== 200 || validationResponse.data.expires_in < 7200) {
             const twitch: Twitch = await twitchRepository.getById(twitchId);
             const refreshToken: string = twitch.refresh_token ?? ((): string => {
                 throw new Error(`Twitch ID '${twitchId}' does not have Refresh Token.`);
             })();
-            const refreshResponse: AxiosResponse<TokenRefreshResponseBody> = await httpClient.getOauthTokenByRefresh(refreshToken);
+            const refreshResponse: AxiosResponse<Token.TokenRefreshResponseBody> = await httpClient.getOauthTokenByRefresh(refreshToken);
             if (refreshResponse.status !== 200) {
                 await twitchRepository.updateTokens(twitchId);
                 this.tokenCache.delete(twitchId);

@@ -1,11 +1,12 @@
-import prisma from "../prisma";
+import prismaInstance from "@chimera/prisma";
+
 import {StreamLabs} from "@prisma/client";
-import {IdView} from "../views";
+import {IdView} from "@chimera/views";
 
 class StreamLabsRepository {
 
     public async getById(id: number): Promise<StreamLabs> {
-        return prisma.streamLabs
+        return prismaInstance.streamLabs
             .findUniqueOrThrow({
                 where: {
                     id: id
@@ -14,7 +15,7 @@ class StreamLabsRepository {
     }
 
     public async getOrCreateStreamLabsId(accountId: string, twitchId: number): Promise<IdView> {
-        return prisma.streamLabs
+        return prismaInstance.streamLabs
             .upsert({
                 where: {
                     account_id: accountId
@@ -35,7 +36,7 @@ class StreamLabsRepository {
     }
 
     public async updateTokens(id: number, accessToken: string, refreshToken: string, socketToken: string): Promise<StreamLabs> {
-        return prisma.streamLabs
+        return prismaInstance.streamLabs
             .update({
                 where: {
                     id: id
@@ -49,7 +50,5 @@ class StreamLabsRepository {
     }
 
 }
-
-export {StreamLabs};
 
 export default new StreamLabsRepository();

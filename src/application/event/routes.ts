@@ -3,7 +3,7 @@ import {ZodError, ZodSchema} from "zod";
 
 import controller from "./controller";
 
-import {EventSyncRequest} from "./dto";
+import * as Dto from "./dto";
 
 export const validate = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -22,8 +22,8 @@ export const validate = (schema: ZodSchema) => (req: Request, res: Response, nex
 
 const router: Router = express.Router();
 
-router.post("/enable", validate(EventSyncRequest), controller.enable);
-router.post("/disable", validate(EventSyncRequest), controller.disable);
+router.post("/enable", validate(Dto.EventSyncRequest), controller.enable);
+router.post("/disable", validate(Dto.EventSyncRequest), controller.disable);
 router.get("/get", controller.get);
 
 export default router;

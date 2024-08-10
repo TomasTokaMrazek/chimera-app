@@ -1,4 +1,5 @@
 import express, {Router} from "express";
+
 import twitchController from "./controller";
 
 const router: Router = express.Router();
