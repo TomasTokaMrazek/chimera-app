@@ -10,8 +10,7 @@ class StreamElementsHttpClient {
 
     private constructor(
         private readonly jwt: string
-    ) {
-    }
+    ) {}
 
     static createInstance(jwt: string): StreamElementsHttpClient {
         return new StreamElementsHttpClient(jwt);

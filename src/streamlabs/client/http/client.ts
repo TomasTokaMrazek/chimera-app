@@ -14,8 +14,7 @@ class StreamLabsHttpClient {
 
     private constructor(
         private readonly accessToken: string
-    ) {
-    }
+    ) {}
 
     static createInstance(accessToken: string): StreamLabsHttpClient {
         return new StreamLabsHttpClient(accessToken);

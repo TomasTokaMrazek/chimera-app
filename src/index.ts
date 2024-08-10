@@ -1,29 +1,4 @@
-import express, {Express, Request, Response} from "express";
-
-import configuration from "@chimera/configuration";
-
-import applicationRouter from "@chimera/application/routes";
-import twitchRoutes from "@chimera/twitch/routes";
-import streamElementsRoutes from "@chimera/streamelements/routes";
-import streamLabsRoutes from "@chimera/streamlabs/routes";
-
-const app: Express = express();
-const port: number = configuration.app.port;
-
-app.use(express.json());
-
-app.use("/application", applicationRouter);
-app.use("/twitch", twitchRoutes);
-app.use("/streamelements", streamElementsRoutes);
-app.use("/streamlabs", streamLabsRoutes);
-
-app.get("/success", (req: Request, res: Response): void => {
-    res.send("Success!");
-});
-
-const server = app.listen(port, (): void => {
-    console.log(`Chimera App listening on port ${port}`);
-});
+import server from "@chimera/express";
 
 const shutdown = () => {
     console.log("\nClose down server gracefully.");

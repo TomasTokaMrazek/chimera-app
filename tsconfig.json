@@ -32,6 +32,7 @@
     "paths": {
       "@chimera/configuration": ["configuration"],
       "@chimera/axios": ["axios-setup"],
+      "@chimera/express": ["express-setup"],
       "@chimera/prisma": ["prisma-setup"],
       "@chimera/views": ["views"],
       "@chimera/application/*": ["application/*"],
