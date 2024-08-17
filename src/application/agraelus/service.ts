@@ -31,9 +31,10 @@ const adminAccountId: string = configuration.app.chatbot.adminAccountId;
 
 const wheelOfNamesUrl: string = configuration.wheelOfNames.url;
 
-const cekybotUserId: string = "807488577"; //cekybot2
-const tokaUserId: string = "69887790"; //TokaTheFirst
-const agraelusUserId: string = "36620767" //Agraelus
+const cekybotAccountId: string = "807488577"; //cekybot2
+const tokaAccountId: string = "69887790"; //TokaTheFirst
+const agraelusAccountId: string = "36620767" //Agraelus
+const appAccountId: string = "1119298268" //ChimeraApp
 
 class AgraelusService {
 
@@ -49,17 +50,15 @@ class AgraelusService {
         switch (messageType) {
             case "notification": {
                 const message: Message.NotificationMessage = parsedData as Message.NotificationMessage;
-                /*
                 if (message.payload.subscription.id !== this.subscriptionId) {
                     return;
                 }
 
-                 */
                 const event: Event.ChannelChatMessage = message.payload.event as Event.ChannelChatMessage;
 
                 const chatterUserId: string = event.chatter_user_id;
                 const chatMessage: string = event.message.text;
-                if (chatterUserId === tokaUserId) {
+                if (chatterUserId === tokaAccountId || chatterUserId === cekybotAccountId) {
                     if (this.firstMessage.isValid) {
                         const difference: Duration<any> = this.firstMessage.diffNow();
                         if (difference.as("seconds") > 10) {
@@ -83,6 +82,8 @@ class AgraelusService {
                             .map((user: string) => user.trim())
                             .filter((user: string): boolean => user.length > 0);
                         this.users.push(...users);
+                    } else {
+                        return;
                     }
 
                     if (this.users.length === this.numberOfUsers) {
@@ -93,7 +94,7 @@ class AgraelusService {
                         const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
                         const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(idView.id);
                         const body: Chat.SendChatMessageRequestBody = {
-                            broadcaster_id: userAccountId,
+                            broadcaster_id: agraelusAccountId,
                             sender_id: userAccountId,
                             message: url + " <- agrTocka @Agraelus"
                         };
@@ -120,7 +121,7 @@ class AgraelusService {
             type: "channel.chat.message",
             version: "1",
             condition: {
-                broadcaster_user_id: tokaUserId,
+                broadcaster_user_id: agraelusAccountId,
                 user_id: userAccountId
             },
             transport: {
@@ -130,6 +131,7 @@ class AgraelusService {
         };
 
         this.subscriptionId = await socketClient.subscribe(idView.id, requestBody, this.handleMessage);
+        console.log(`Agraelus Spin Wheel event subscription id: ${this.subscriptionId}`);
     }
 
     public async disconnect(): Promise<void> {
@@ -204,7 +206,7 @@ class AgraelusService {
 
         const body: Wheel.PostRequest = {
             wheelConfig: {
-                description: "Točka pro agrBajs ze dne " + DateTime.now().toLocaleString(DateTime.DATE_FULL),
+                description: "Točka pro agrBajs ze dne " + DateTime.now().setLocale("cs-CZ").toLocaleString(DateTime.DATE_FULL),
                 title: "Agraelus",
                 type: Wheel.Type.COLOR,
                 spinTime: 5,
