@@ -1,5 +1,6 @@
 import WebSocket from "ws";
-import {DateTime, Duration} from "luxon";
+import { isValid, differenceInSeconds, format } from "date-fns";
+import { cs } from "date-fns/locale";
 
 import {AxiosResponse} from "@chimera/axios";
 
@@ -38,7 +39,7 @@ const appAccountId: string = "1119298268" //ChimeraApp
 
 class AgraelusService {
 
-    private firstMessage: DateTime = DateTime.invalid("Undefined");
+    private firstMessage: Date = new Date(NaN);
     private numberOfUsers: number = 0;
     private users: string[] = [];
 
@@ -59,15 +60,15 @@ class AgraelusService {
                 const chatterUserId: string = event.chatter_user_id;
                 const chatMessage: string = event.message.text;
                 if (chatterUserId === tokaAccountId || chatterUserId === cekybotAccountId) {
-                    if (this.firstMessage.isValid) {
-                        const difference: Duration<any> = this.firstMessage.diffNow();
-                        if (difference.as("seconds") > 10) {
+                    if (isValid(this.firstMessage)) {
+                        const difference: number = differenceInSeconds(new Date(), this.firstMessage);
+                        if (difference > 10) {
                             this.reset();
                         }
                     }
 
                     if (chatMessage.startsWith("Seznam")) {
-                        this.firstMessage = DateTime.now();
+                        this.firstMessage = new Date();
                         const numberOfUsers: string = chatMessage.substring(chatMessage.indexOf("Seznam[") + 7, chatMessage.indexOf("]") + 1);
                         this.numberOfUsers = parseInt(numberOfUsers);
                         const users: string[] = chatMessage
@@ -76,7 +77,7 @@ class AgraelusService {
                             .map((user: string) => user.trim())
                             .filter((user: string): boolean => user.length > 0);
                         this.users.push(...users);
-                    } else if (this.firstMessage.isValid) {
+                    } else if (isValid(this.firstMessage)) {
                         const users: string[] = chatMessage
                             .split(";")
                             .map((user: string) => user.trim())
@@ -148,7 +149,7 @@ class AgraelusService {
     }
 
     private reset(): void {
-        this.firstMessage = DateTime.invalid("Undefined");
+        this.firstMessage = new Date(NaN);
         this.numberOfUsers = 0;
         this.users = [];
     }
@@ -206,7 +207,7 @@ class AgraelusService {
 
         const body: Wheel.PostRequest = {
             wheelConfig: {
-                description: "Točka pro agrBajs ze dne " + DateTime.now().setLocale("cs-CZ").toLocaleString(DateTime.DATE_FULL),
+                description: "Točka pro agrBajs ze dne " + format(new Date(), "EEEE, d MMMM yyyy", { locale: cs }),
                 title: "Agraelus",
                 type: Wheel.Type.COLOR,
                 spinTime: 5,

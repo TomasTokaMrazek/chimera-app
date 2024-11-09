@@ -1,6 +1,6 @@
 import TTLCache from "@isaacs/ttlcache";
 import {CronJob} from "cron";
-import {Duration} from "luxon";
+import {hoursToSeconds} from "date-fns";
 
 import {AxiosResponse} from "@chimera/axios";
 import {Twitch} from "@prisma/client";
@@ -12,7 +12,7 @@ import * as Token from "./dto/token";
 
 class TwitchHttpClientManager {
 
-    private cronJob: CronJob = new CronJob("0 0 * * * *", async (): Promise<void> => {
+    private readonly cronJob: CronJob = new CronJob("0 0 * * * *", async (): Promise<void> => {
         try {
             console.log("Cron Job - start");
             await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]: [number, string]): Promise<void> => {
@@ -24,8 +24,8 @@ class TwitchHttpClientManager {
         }
     }, null, true);
 
-    private tokenCache: TTLCache<number, string> = new TTLCache({
-        ttl: Duration.fromObject({days: 1}).as("milliseconds"),
+    private readonly tokenCache: TTLCache<number, string> = new TTLCache({
+        ttl: hoursToSeconds(24),
         updateAgeOnGet: true
     });
 
