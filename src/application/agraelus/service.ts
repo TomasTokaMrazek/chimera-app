@@ -1,10 +1,11 @@
 import {Injectable, Logger} from "@nestjs/common";
+import {HttpService} from "@nestjs/axios";
 
 import WebSocket from "ws";
 import {isValid, differenceInSeconds, format} from "date-fns";
 import {cs} from "date-fns/locale";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {IdView} from "@chimera/twitch/repository/views";
@@ -43,6 +44,7 @@ const appAccountId: string = "1119298268"; //ChimeraApp
 export class ApplicationAgraelusService {
 
     constructor(
+        private readonly httpService: HttpService,
         private readonly twitchRepository: TwitchRepository,
         private readonly twitchSocketClientManager: TwitchSocketClientManager,
         private readonly twitchHttpClientManager: TwitchHttpClientManager
@@ -232,7 +234,7 @@ export class ApplicationAgraelusService {
             shareMode: Wheel.ShareMode.COPYABLE
         };
 
-        const wheelOfNamesClient: WheelOfNamesClient = WheelOfNamesClient.createInstance();
+        const wheelOfNamesClient: WheelOfNamesClient = WheelOfNamesClient.createInstance(this.httpService);
         const response: AxiosResponse<Wheel.PostResponse> = await wheelOfNamesClient.createSharedWheel(body);
         if (response.status !== 200) {
             throw new Error("Unable to create Wheel Of Names.");

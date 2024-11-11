@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 
 import {TwitchHttpClientManager} from "@chimera/twitch/client/http/manager";
 import TwitchHttpClient from "@chimera/twitch/client/http/client";

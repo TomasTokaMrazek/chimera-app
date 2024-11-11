@@ -1,4 +1,7 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "@chimera/axios";
+import {HttpService} from "@nestjs/axios";
+
+import {AxiosRequestConfig, AxiosResponse} from "axios";
+import {lastValueFrom} from "rxjs";
 
 import * as Dto from "./dto";
 
@@ -13,11 +16,12 @@ const clientSecret: string = configuration.streamLabs.clientSecret;
 class StreamLabsHttpClient {
 
     private constructor(
+        private readonly httpService: HttpService,
         private readonly accessToken: string
     ) {}
 
-    static createInstance(accessToken: string): StreamLabsHttpClient {
-        return new StreamLabsHttpClient(accessToken);
+    static createInstance(httpService: HttpService, accessToken: string): StreamLabsHttpClient {
+        return new StreamLabsHttpClient(httpService, accessToken);
     }
 
 
@@ -36,7 +40,7 @@ class StreamLabsHttpClient {
             "client_secret": clientSecret
         };
 
-        return axiosInstance.post(`${streamLabsApiUrl}/token`, params, config);
+        return lastValueFrom(this.httpService.post(`${streamLabsApiUrl}/token`, params, config));
     }
 
     public getSocketToken(): Promise<AxiosResponse<Dto.SocketTokenResponse>> {
@@ -46,7 +50,7 @@ class StreamLabsHttpClient {
             }
         };
 
-        return axiosInstance.get(`${streamLabsApiUrl}/socket/token`, config);
+        return lastValueFrom(this.httpService.get(`${streamLabsApiUrl}/socket/token`, config));
     }
 
     public getUser(): Promise<AxiosResponse<Dto.UserResponse>> {
@@ -56,7 +60,7 @@ class StreamLabsHttpClient {
             }
         };
 
-        return axiosInstance.get(`${streamLabsApiUrl}/user`, config);
+        return lastValueFrom(this.httpService.get(`${streamLabsApiUrl}/user`, config));
     }
 
     public getDonations(): Promise<AxiosResponse<Dto.DonationListResponse>> {
@@ -66,7 +70,7 @@ class StreamLabsHttpClient {
             }
         };
 
-        return axiosInstance.get(`${streamLabsApiUrl}/donations`, config);
+        return lastValueFrom(this.httpService.get(`${streamLabsApiUrl}/donations`, config));
     }
 
     public createDonation(body: Dto.DonationRequest): Promise<AxiosResponse<Dto.DonationResponse>> {
@@ -76,7 +80,7 @@ class StreamLabsHttpClient {
             }
         };
 
-        return axiosInstance.post(`${streamLabsApiUrl}/donations`, body, config);
+        return lastValueFrom(this.httpService.post(`${streamLabsApiUrl}/donations`, body, config));
     }
 
 }

@@ -1,4 +1,7 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "@chimera/axios";
+import {HttpService} from "@nestjs/axios";
+
+import {AxiosRequestConfig, AxiosResponse} from "axios";
+import {lastValueFrom} from "rxjs";
 
 import * as Token from "./dto/token";
 import * as EventSub from "./dto/eventsub";
@@ -16,11 +19,12 @@ const clientSecret: string = configuration.twitch.clientSecret;
 class TwitchHttpClient {
 
     private constructor(
+        private readonly httpService: HttpService,
         private readonly accessToken: string
     ) {}
 
-    static createInstance(accessToken: string): TwitchHttpClient {
-        return new TwitchHttpClient(accessToken);
+    static createInstance(httpService: HttpService, accessToken: string): TwitchHttpClient {
+        return new TwitchHttpClient(httpService, accessToken);
     }
 
     public async getOauthTokenByCode(authorizationCode: string): Promise<AxiosResponse<Token.TokenCodeResponseBody>> {
@@ -41,7 +45,7 @@ class TwitchHttpClient {
             "client_secret": clientSecret
         };
 
-        return axiosInstance.post(`${twitchOauthUrl}/token`, body, config);
+        return lastValueFrom(this.httpService.post(`${twitchOauthUrl}/token`, body, config));
     }
 
     public async getOauthTokenByRefresh(refreshToken: string): Promise<AxiosResponse<Token.TokenRefreshResponseBody>> {
@@ -61,7 +65,7 @@ class TwitchHttpClient {
             "client_secret": clientSecret
         };
 
-        return axiosInstance.post(`${twitchOauthUrl}/token`, data, config);
+        return lastValueFrom(this.httpService.post(`${twitchOauthUrl}/token`, data, config));
     }
 
     public async getOauthTokenValidation(): Promise<AxiosResponse<Token.TokenValidationResponseBody>> {
@@ -74,7 +78,7 @@ class TwitchHttpClient {
             }
         };
 
-        return axiosInstance.get(`${twitchOauthUrl}/validate`, config);
+        return lastValueFrom(this.httpService.get(`${twitchOauthUrl}/validate`, config));
     }
 
     public async getOauthUser(): Promise<AxiosResponse<Token.UserInfoResponseBody>> {
@@ -87,7 +91,7 @@ class TwitchHttpClient {
             }
         };
 
-        return axiosInstance.get(`${twitchOauthUrl}/userinfo`, config);
+        return lastValueFrom(this.httpService.get(`${twitchOauthUrl}/userinfo`, config));
     }
 
     public async createEventSubSubscription(body: EventSub.CreateEventSubSubscriptionRequestBody): Promise<AxiosResponse<EventSub.CreateEventSubSubscriptionResponseBody>> {
@@ -101,7 +105,7 @@ class TwitchHttpClient {
             }
         };
 
-        return axiosInstance.post(`${twitchApiUrl}/eventsub/subscriptions`, body, config);
+        return lastValueFrom(this.httpService.post(`${twitchApiUrl}/eventsub/subscriptions`, body, config));
     }
 
     public async deleteEventSubSubscription(params: EventSub.DeleteEventSubSubscriptionRequestParams): Promise<AxiosResponse<void>> {
@@ -116,7 +120,7 @@ class TwitchHttpClient {
             params: params
         };
 
-        return axiosInstance.delete(`${twitchApiUrl}/eventsub/subscriptions`, config);
+        return lastValueFrom(this.httpService.delete(`${twitchApiUrl}/eventsub/subscriptions`, config));
     }
 
     public async getEventSubSubscription(params: EventSub.GetEventSubSubscriptionRequestParams): Promise<AxiosResponse<EventSub.GetEventSubSubscriptionResponseBody>> {
@@ -131,7 +135,7 @@ class TwitchHttpClient {
             params: params
         };
 
-        return axiosInstance.get(`${twitchApiUrl}/eventsub/subscriptions`, config);
+        return lastValueFrom(this.httpService.get(`${twitchApiUrl}/eventsub/subscriptions`, config));
     }
 
     public async getUsers(params: User.GetUsersRequestParams): Promise<AxiosResponse<User.GetUsersResponseBody>> {
@@ -146,7 +150,7 @@ class TwitchHttpClient {
             params: params
         };
 
-        return axiosInstance.get(`${twitchApiUrl}/users`, config);
+        return lastValueFrom(this.httpService.get(`${twitchApiUrl}/users`, config));
     }
 
     public async getUsersChatColor(params: Chat.GetUsersChatColorRequestParams): Promise<AxiosResponse<Chat.GetUsersChatColorResponseBody>> {
@@ -161,7 +165,7 @@ class TwitchHttpClient {
             params: params
         };
 
-        return axiosInstance.get(`${twitchApiUrl}/chat/color`, config);
+        return lastValueFrom(this.httpService.get(`${twitchApiUrl}/chat/color`, config));
     }
 
     public async sentChatMessage(body: Chat.SendChatMessageRequestBody): Promise<AxiosResponse<Chat.SendChatMessageResponseBody>> {
@@ -175,9 +179,9 @@ class TwitchHttpClient {
             }
         };
 
-        return axiosInstance.post(`${twitchApiUrl}/chat/messages`, body, config);
+        return lastValueFrom(this.httpService.post(`${twitchApiUrl}/chat/messages`, body, config));
     }
 
 }
 
-export default TwitchHttpClient
+export default TwitchHttpClient;

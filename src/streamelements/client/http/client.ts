@@ -1,4 +1,7 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "@chimera/axios";
+import {HttpService} from "@nestjs/axios";
+
+import {AxiosRequestConfig, AxiosResponse} from "axios";
+import {lastValueFrom} from "rxjs";
 
 import * as Dto from "./dto";
 
@@ -9,11 +12,12 @@ const streamElementsApi: string = configuration.streamElements.apiUrl;
 class StreamElementsHttpClient {
 
     private constructor(
+        private readonly httpService: HttpService,
         private readonly jwt: string
     ) {}
 
-    static createInstance(jwt: string): StreamElementsHttpClient {
-        return new StreamElementsHttpClient(jwt);
+    static createInstance(httpService: HttpService, jwt: string): StreamElementsHttpClient {
+        return new StreamElementsHttpClient(httpService, jwt);
     }
 
 
@@ -24,7 +28,7 @@ class StreamElementsHttpClient {
             }
         };
 
-        return axiosInstance.get(`${streamElementsApi}/users/current`, config);
+        return lastValueFrom(this.httpService.get(`${streamElementsApi}/users/current`, config));
     }
 
     public getCurrentUserChannel(): Promise<AxiosResponse<Dto.CurrentUserChannel>> {
@@ -34,7 +38,7 @@ class StreamElementsHttpClient {
             }
         };
 
-        return axiosInstance.get(`${streamElementsApi}/channels/me`, config);
+        return lastValueFrom(this.httpService.get(`${streamElementsApi}/channels/me`, config));
     }
 
     public getTips(channel: string, queryParams: Dto.TipListRequestParams): Promise<AxiosResponse<Dto.TipListResponse>> {
@@ -45,7 +49,7 @@ class StreamElementsHttpClient {
             params: queryParams
         };
 
-        return axiosInstance.get(`${streamElementsApi}/tips/${channel}`, config);
+        return lastValueFrom(this.httpService.get(`${streamElementsApi}/tips/${channel}`, config));
     }
 
     public createTip(channel: string, body: Dto.TipRequest): Promise<AxiosResponse<any>> {
@@ -55,7 +59,7 @@ class StreamElementsHttpClient {
             }
         };
 
-        return axiosInstance.post(`${streamElementsApi}/tips/${channel}`, body, config);
+        return lastValueFrom(this.httpService.post(`${streamElementsApi}/tips/${channel}`, body, config));
     }
 
     public getTip(channel: string, tipId: string): Promise<AxiosResponse<any>> {
@@ -65,7 +69,7 @@ class StreamElementsHttpClient {
             }
         };
 
-        return axiosInstance.get(`${streamElementsApi}/tips/${channel}/${tipId}`, config);
+        return lastValueFrom(this.httpService.get(`${streamElementsApi}/tips/${channel}/${tipId}`, config));
     }
 
 }

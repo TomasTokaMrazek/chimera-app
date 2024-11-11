@@ -1,4 +1,7 @@
-import axiosInstance, {AxiosRequestConfig, AxiosResponse} from "@chimera/axios";
+import {HttpService} from "@nestjs/axios";
+
+import {AxiosRequestConfig, AxiosResponse} from "axios";
+import {lastValueFrom} from "rxjs";
 
 import * as Dto from "./dto";
 
@@ -9,8 +12,12 @@ const wheelOfNamesApiKey: string = configuration.wheelOfNames.apiKey;
 
 class WheelOfNamesHttpClient {
 
-    static createInstance(): WheelOfNamesHttpClient {
-        return new WheelOfNamesHttpClient();
+    private constructor(
+        private readonly httpService: HttpService
+    ) {}
+
+    static createInstance(httpService: HttpService): WheelOfNamesHttpClient {
+        return new WheelOfNamesHttpClient(httpService);
     }
 
     public createSharedWheel(body: Dto.PostRequest): Promise<AxiosResponse<Dto.PostResponse>> {
@@ -23,7 +30,7 @@ class WheelOfNamesHttpClient {
             }
         };
 
-        return axiosInstance.post(`${wheelOfNamesApiUrl}/wheels/shared`, body, config);
+        return lastValueFrom(this.httpService.post(`${wheelOfNamesApiUrl}/wheels/shared`, body, config));
     }
 
 }

@@ -1,10 +1,11 @@
 import {Injectable, Logger} from "@nestjs/common";
+import {HttpService} from "@nestjs/axios";
 
 import TTLCache from "@isaacs/ttlcache";
 import {CronJob} from "cron";
 import {hoursToSeconds} from "date-fns";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 import {Twitch} from "@prisma/client";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
@@ -16,6 +17,7 @@ import * as Token from "./dto/token";
 export class TwitchHttpClientManager {
 
     constructor(
+        private readonly httpService: HttpService,
         private readonly twitchRepository: TwitchRepository
     ) {}
 
@@ -50,11 +52,11 @@ export class TwitchHttpClientManager {
         const newAccessToken: string = this.tokenCache.get(twitchId) ?? ((): string => {
             throw new Error(`Twitch ID '${twitchId}' does not have Access Token.`);
         })();
-        return TwitchHttpClient.createInstance(newAccessToken);
+        return TwitchHttpClient.createInstance(this.httpService, newAccessToken);
     }
 
     private async validateAccessToken(twitchId: number, accessToken: string): Promise<void> {
-        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
+        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(this.httpService, accessToken);
         const validationResponse: AxiosResponse<Token.TokenValidationResponseBody> = await httpClient.getOauthTokenValidation();
         if (validationResponse.status !== 200 || validationResponse.data.expires_in < 7200) {
             const twitch: Twitch = await this.twitchRepository.getById(twitchId);

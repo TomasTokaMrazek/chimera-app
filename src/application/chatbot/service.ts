@@ -1,6 +1,7 @@
 import {Injectable} from '@nestjs/common';
+import {HttpService} from "@nestjs/axios";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 import {Twitch} from "@prisma/client";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
@@ -25,6 +26,7 @@ const userAccountId: string = configuration.app.chatbot.userAccountId;
 export class ApplicationChatbotService {
 
     constructor(
+        private readonly httpService: HttpService,
         private readonly twitchRepository: TwitchRepository,
         private readonly twitchSocketClientManager: TwitchSocketClientManager
     ) {}
@@ -62,7 +64,7 @@ export class ApplicationChatbotService {
     }
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
-        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance("");
+        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(this.httpService, "");
         const oauthTokensResponse: AxiosResponse<TokenDto.TokenCodeResponseBody> = await httpClient.getOauthTokenByCode(authorizationCode);
         const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
             throw new Error("Twitch Access Token is undefined.");
@@ -78,7 +80,7 @@ export class ApplicationChatbotService {
     }
 
     private async getAccountIds(accessToken: string): Promise<AccountIds> {
-        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
+        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(this.httpService, accessToken);
         const userResponse: AxiosResponse<TokenDto.UserInfoResponseBody> = await httpClient.getOauthUser();
         const twitchAccountId: string = userResponse.data.sub ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");

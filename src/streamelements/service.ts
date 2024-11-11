@@ -1,6 +1,7 @@
 import {Injectable} from '@nestjs/common';
+import {HttpService} from "@nestjs/axios";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {UserView} from "@chimera/twitch/repository/views";
@@ -19,6 +20,7 @@ import StreamElementsSocketClient from "./client/socket/client";
 export class StreamElementsService {
 
     constructor(
+        private readonly httpService: HttpService,
         private readonly streamElementsRepository: StreamElementsRepository,
         private readonly twitchRepository: TwitchRepository
     ) {}
@@ -46,7 +48,7 @@ export class StreamElementsService {
             throw new Error(`StreamElements Account '${streamElements.account_id}' does not have Authorization token.`);
         })();
 
-        const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(jwt);
+        const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(this.httpService, jwt);
         this.httpClients.set(user.id, httpclient);
 
         const socketClient: StreamElementsSocketClient = StreamElementsSocketClient.createInstance(user, jwt);
@@ -60,7 +62,7 @@ export class StreamElementsService {
     }
 
     private async getAccountIds(jwt: string): Promise<AccountIds> {
-        const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(jwt);
+        const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(this.httpService, jwt);
         const userResponse: AxiosResponse<HttpDto.CurrentUserRequest> = await httpclient.getCurrentUser();
         const twitchAccountId: string = userResponse.data.channels.find((channel: HttpDto.CurrentUserChannel): boolean => channel.provider == "twitch")?.providerId ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");

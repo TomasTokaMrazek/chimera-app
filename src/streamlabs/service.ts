@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
+import {HttpService} from "@nestjs/axios";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {UserView} from "@chimera/twitch/repository/views";
@@ -27,6 +28,7 @@ const clientID: string = configuration.streamLabs.clientId;
 export class StreamLabsService {
 
     constructor(
+        private readonly httpService: HttpService,
         private readonly streamLabsRepository: StreamLabsRepository,
         private readonly twitchRepository: TwitchRepository,
         private readonly applicationEventManager: ApplicationEventManager
@@ -69,7 +71,7 @@ export class StreamLabsService {
             throw new Error(`StreamLabs Account '${streamLabs.account_id}' does not have Authorization token`);
         })();
 
-        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(this.httpService, accessToken);
         this.httpClients.set(user.id, httpclient);
 
         const socketClient: StreamLabsSocketClient = StreamLabsSocketClient.createInstance(this.applicationEventManager, user, socketToken);
@@ -83,7 +85,7 @@ export class StreamLabsService {
     }
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
-        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance("");
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(this.httpService, "");
         const oauthTokensResponse: AxiosResponse<HttpDto.TokenResponse> = await httpclient.getOauthTokens(authorizationCode);
         const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
             throw new Error("Access Token is undefined.");
@@ -99,7 +101,7 @@ export class StreamLabsService {
     }
 
     private async getSocketToken(accessToken: string): Promise<SocketToken> {
-        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(this.httpService, accessToken);
         const socketTokenResponse: AxiosResponse<HttpDto.SocketTokenResponse> = await httpclient.getSocketToken();
         const socketToken: string = socketTokenResponse.data.socket_token ?? ((): string => {
             throw new Error("Socket Token is undefined.");
@@ -111,7 +113,7 @@ export class StreamLabsService {
     }
 
     private async getAccountIds(accessToken: string): Promise<AccountIds> {
-        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
+        const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(this.httpService, accessToken);
         const userResponse: AxiosResponse<HttpDto.UserResponse> = await httpclient.getUser();
         const twitchAccountId: number = userResponse.data.twitch.id ?? ((): string => {
             throw new Error("Twitch Account ID is undefined.");

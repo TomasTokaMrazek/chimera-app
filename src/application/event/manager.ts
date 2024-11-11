@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 
 import {ApplicationEventRepository} from "./repository";
 import {EventSynchronization, User} from "@prisma/client";

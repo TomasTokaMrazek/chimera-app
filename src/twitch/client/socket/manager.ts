@@ -3,7 +3,7 @@ import {Injectable, Logger} from "@nestjs/common";
 import WebSocket, {RawData} from "ws";
 import {CronJob} from "cron";
 
-import {AxiosResponse} from "@chimera/axios";
+import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {AccountIdView} from "@chimera/twitch/repository/views";
