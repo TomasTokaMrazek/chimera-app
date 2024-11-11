@@ -30,7 +30,7 @@ export class TwitchHttpClientManager {
     });
 
     @Cron("0 0 * * * *")
-    private async validateClients() {
+    private async validateClients(): Promise<void> {
         this.logger.log("Cron Job - start");
         await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]: [number, string]): Promise<void> => {
             return await this.validateAccessToken(twitchId, accessToken);

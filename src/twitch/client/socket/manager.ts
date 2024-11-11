@@ -27,7 +27,7 @@ export class TwitchSocketClientManager {
     private readonly socketClients: Map<number, TwitchSocketClient> = new Map();
 
     @Cron("0 * * * * *")
-    private async cleanClients() {
+    private async cleanClients(): Promise<void> {
         this.logger.log("Cron Job - start");
         await Promise.all(Array.from(this.socketClients.entries()).map(async ([twitchId, socketClient]: [number, TwitchSocketClient]): Promise<void> => {
             if (!await socketClient.isOpen()) {
