@@ -1,7 +1,7 @@
 import {Injectable, Logger} from "@nestjs/common";
+import {Cron} from "@nestjs/schedule";
 
 import WebSocket, {RawData} from "ws";
-import {CronJob} from "cron";
 
 import {AxiosResponse} from "axios";
 
@@ -25,19 +25,17 @@ export class TwitchSocketClientManager {
 
     private readonly logger: Logger = new Logger(TwitchSocketClientManager.name);
     private readonly socketClients: Map<number, TwitchSocketClient> = new Map();
-    private readonly cronJob: CronJob = new CronJob("0 * * * * *", async (): Promise<void> => {
-        try {
-            this.logger.log("Cron Job - start");
-            await Promise.all(Array.from(this.socketClients.entries()).map(async ([twitchId, socketClient]: [number, TwitchSocketClient]): Promise<void> => {
-                if (!await socketClient.isOpen()) {
-                    this.socketClients.delete(twitchId);
-                }
-            }));
-            this.logger.log("Cron Job - end");
-        } catch (e) {
-            this.logger.error(e);
-        }
-    }, null, true);
+
+    @Cron("0 * * * * *")
+    private async cleanClients() {
+        this.logger.log("Cron Job - start");
+        await Promise.all(Array.from(this.socketClients.entries()).map(async ([twitchId, socketClient]: [number, TwitchSocketClient]): Promise<void> => {
+            if (!await socketClient.isOpen()) {
+                this.socketClients.delete(twitchId);
+            }
+        }));
+        this.logger.log("Cron Job - end");
+    }
 
     public async connectClient(twitchId: number, url: string): Promise<void> {
         const socket: WebSocket = new WebSocket(url);

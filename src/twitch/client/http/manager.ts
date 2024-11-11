@@ -1,8 +1,8 @@
 import {Injectable, Logger} from "@nestjs/common";
+import {Cron} from "@nestjs/schedule";
 import {HttpService} from "@nestjs/axios";
 
 import TTLCache from "@isaacs/ttlcache";
-import {CronJob} from "cron";
 import {hoursToSeconds} from "date-fns";
 
 import {AxiosResponse} from "axios";
@@ -12,6 +12,7 @@ import {TwitchRepository} from "@chimera/twitch/repository/repository";
 
 import TwitchHttpClient from "./client";
 import * as Token from "./dto/token";
+
 
 @Injectable()
 export class TwitchHttpClientManager {
@@ -23,22 +24,19 @@ export class TwitchHttpClientManager {
 
     private readonly logger: Logger = new Logger(TwitchHttpClientManager.name);
 
-    private readonly cronJob: CronJob = new CronJob("0 0 * * * *", async (): Promise<void> => {
-        try {
-            this.logger.log("Cron Job - start");
-            await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]: [number, string]): Promise<void> => {
-                return await this.validateAccessToken(twitchId, accessToken);
-            }));
-            this.logger.log("Cron Job - end");
-        } catch (e) {
-            this.logger.error(e);
-        }
-    }, null, true);
-
     private readonly tokenCache: TTLCache<number, string> = new TTLCache({
         ttl: hoursToSeconds(24),
         updateAgeOnGet: true
     });
+
+    @Cron("0 0 * * * *")
+    private async validateClients() {
+        this.logger.log("Cron Job - start");
+        await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]: [number, string]): Promise<void> => {
+            return await this.validateAccessToken(twitchId, accessToken);
+        }));
+        this.logger.log("Cron Job - end");
+    }
 
     public async getHttpClient(twitchId: number): Promise<TwitchHttpClient> {
         const accessToken: string = this.tokenCache.get(twitchId) ?? await (async (): Promise<string> => {
