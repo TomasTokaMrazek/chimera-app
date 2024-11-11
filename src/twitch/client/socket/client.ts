@@ -2,7 +2,7 @@ import WebSocket from "ws";
 
 import {AxiosResponse} from "@chimera/axios";
 
-import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
+import {TwitchHttpClientManager} from "@chimera/twitch/client/http/manager";
 import TwitchHttpClient from "@chimera/twitch/client/http/client";
 import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
 
@@ -15,6 +15,7 @@ export type HandleMessageFunction = (
 class TwitchSocketClient {
 
     public constructor(
+        private readonly twitchHttpClientManager: TwitchHttpClientManager,
         private readonly _socket: WebSocket,
         private readonly _sessionId: string
     ) {}
@@ -25,7 +26,7 @@ class TwitchSocketClient {
 
     public async subscribe(twitchId: number, body: EventSub.CreateEventSubSubscriptionRequestBody, handleMessage: HandleMessageFunction): Promise<string> {
         if (await this.isOpen()) {
-            const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(twitchId);
+            const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(twitchId);
             const response: AxiosResponse<EventSub.CreateEventSubSubscriptionResponseBody> = await httpClient.createEventSubSubscription(body);
             if (response.status !== 202) {
                 throw new Error(`Twitch Socket Session ID '${this._sessionId}' was unable to subscribe to event.`);
@@ -41,7 +42,7 @@ class TwitchSocketClient {
 
     public async unsubscribe(twitchId: number, params: EventSub.DeleteEventSubSubscriptionRequestParams, handleMessage: HandleMessageFunction): Promise<void> {
         if (await this.isOpen()) {
-            const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(twitchId);
+            const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(twitchId);
             const response: AxiosResponse<void> = await httpClient.deleteEventSubSubscription(params);
             if (response.status !== 204) {
                 throw new Error(`Twitch Socket Session ID '${this._sessionId}' was unable to unsubscribe from event.`);

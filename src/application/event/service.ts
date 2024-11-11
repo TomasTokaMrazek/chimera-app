@@ -1,38 +1,44 @@
+import {Injectable} from '@nestjs/common';
+
 import {EventSyncRequestType} from "./dto";
 
 import {EventSynchronization, User} from "@prisma/client";
 
-import twitchRepository from "@chimera/twitch/repository/repository";
+import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {UserView} from "@chimera/twitch/repository/views";
 
-import applicationEventRepository from "./repository";
+import {ApplicationEventRepository} from "./repository";
 
-class ApplicationEventService {
+@Injectable()
+export class ApplicationEventService {
+
+    constructor(
+        private readonly applicationEventRepository: ApplicationEventRepository,
+        private readonly twitchRepository: TwitchRepository
+    ) {}
 
     public async enable(request: EventSyncRequestType): Promise<void> {
-        const userView: UserView = await twitchRepository.getUserByAccountId(request.twitchAccountId);
+        const userView: UserView = await this.twitchRepository.getUserByAccountId(request.twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${request.twitchAccountId}' is not associated with User.`);
         })();
-        await applicationEventRepository.create(user.id, request.sync.from, request.sync.to);
+        await this.applicationEventRepository.create(user.id, request.sync.from, request.sync.to);
     }
 
     public async disable(request: EventSyncRequestType): Promise<void> {
-        const userView: UserView = await twitchRepository.getUserByAccountId(request.twitchAccountId);
+        const userView: UserView = await this.twitchRepository.getUserByAccountId(request.twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${request.twitchAccountId}' is not associated with User.`);
         })();
-        await applicationEventRepository.delete(user.id, request.sync.from, request.sync.to);
+        await this.applicationEventRepository.delete(user.id, request.sync.from, request.sync.to);
     }
 
     public async get(twitchAccountId: string): Promise<EventSynchronization[]> {
-        const userView: UserView = await twitchRepository.getUserByAccountId(twitchAccountId);
+        const userView: UserView = await this.twitchRepository.getUserByAccountId(twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${twitchAccountId}' is not associated with User.`);
         })();
-        return await applicationEventRepository.get(user.id);
+        return await this.applicationEventRepository.get(user.id);
     }
 
 }
-
-export default new ApplicationEventService();

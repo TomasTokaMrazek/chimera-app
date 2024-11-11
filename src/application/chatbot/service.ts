@@ -1,13 +1,15 @@
+import {Injectable} from '@nestjs/common';
+
 import {AxiosResponse} from "@chimera/axios";
 import {Twitch} from "@prisma/client";
 
-import twitchRepository from "@chimera/twitch/repository/repository";
+import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {IdView} from "@chimera/twitch/repository/views";
 
 import TwitchHttpClient from "@chimera/twitch/client/http/client";
 import * as TokenDto from "@chimera/twitch/client/http/dto/token";
 
-import twitchSocketClientManager from "@chimera/twitch/client/socket/manager";
+import {TwitchSocketClientManager} from "@chimera/twitch/client/socket/manager";
 
 import {AccountIds, OauthTokens} from "./types";
 
@@ -19,7 +21,13 @@ const clientID: string = configuration.twitch.clientId;
 const redirectUri: string = configuration.app.chatbot.redirectUri;
 const userAccountId: string = configuration.app.chatbot.userAccountId;
 
-class ChatbotService {
+@Injectable()
+export class ApplicationChatbotService {
+
+    constructor(
+        private readonly twitchRepository: TwitchRepository,
+        private readonly twitchSocketClientManager: TwitchSocketClientManager
+    ) {}
 
     public async login(): Promise<URL> {
         const url: URL = new URL(twitchOauthUrl + "/authorize");
@@ -39,18 +47,18 @@ class ChatbotService {
         if (accountIds.twitch !== userAccountId) {
             throw new Error(`Twitch Account not allowed.`);
         }
-        const twitch: Twitch = await twitchRepository.getOrInsertByAccountId(accountIds.twitch);
-        await twitchRepository.updateTokens(twitch.id, oauthTokens.accessToken, oauthTokens.refreshToken);
+        const twitch: Twitch = await this.twitchRepository.getOrInsertByAccountId(accountIds.twitch);
+        await this.twitchRepository.updateTokens(twitch.id, oauthTokens.accessToken, oauthTokens.refreshToken);
     }
 
     public async connect(): Promise<void> {
-        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
-        await twitchSocketClientManager.connectClient(idView.id, twitchWebsocketUrl);
+        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
+        await this.twitchSocketClientManager.connectClient(idView.id, twitchWebsocketUrl);
     }
 
     public async disconnect(): Promise<void> {
-        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
-        return twitchSocketClientManager.disconnectClient(idView.id);
+        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
+        return this.twitchSocketClientManager.disconnectClient(idView.id);
     }
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
@@ -82,5 +90,3 @@ class ChatbotService {
     }
 
 }
-
-export default new ChatbotService();

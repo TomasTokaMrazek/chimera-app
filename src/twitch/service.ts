@@ -1,7 +1,9 @@
+import {Injectable} from '@nestjs/common';
+
 import {AxiosResponse} from "@chimera/axios";
 import {Twitch} from "@prisma/client";
 
-import twitchRepository from "./repository/repository";
+import {TwitchRepository} from "@chimera/twitch/repository/repository";
 
 import {AccountIds, OauthTokens} from "./types";
 import TwitchHttpClient from "./client/http/client";
@@ -13,7 +15,12 @@ const twitchOauthUrl: string = configuration.twitch.oauthUrl;
 const redirectUri: string = configuration.twitch.redirectUri;
 const clientID: string = configuration.twitch.clientId;
 
-class TwitchService {
+@Injectable()
+export class TwitchService {
+
+    constructor(
+        private readonly twitchRepository: TwitchRepository
+    ) {}
 
     public async login(): Promise<URL> {
         const url: URL = new URL(twitchOauthUrl + "/authorize");
@@ -30,8 +37,8 @@ class TwitchService {
             throw new Error(`Twitch Account Access Token is undefined.`);
         })();
         const accountIds: AccountIds = await this.getAccountIds(accessToken);
-        const twitch: Twitch = await twitchRepository.getOrInsertByAccountId(accountIds.twitch);
-        await twitchRepository.updateTokens(twitch.id, oauthTokens.accessToken, oauthTokens.refreshToken);
+        const twitch: Twitch = await this.twitchRepository.getOrInsertByAccountId(accountIds.twitch);
+        await this.twitchRepository.updateTokens(twitch.id, oauthTokens.accessToken, oauthTokens.refreshToken);
     }
 
     private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
@@ -63,5 +70,3 @@ class TwitchService {
     }
 
 }
-
-export default new TwitchService();

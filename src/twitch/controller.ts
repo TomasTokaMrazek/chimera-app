@@ -1,22 +1,31 @@
+import {Controller, Get, Req, Res, Next} from "@nestjs/common";
+
 import {Request, Response, NextFunction} from "express";
 
-import twitchService from "./service";
+import {TwitchService} from "./service";
 
-class TwitchController {
+@Controller("twitch")
+export class TwitchController {
 
-    public async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    constructor(
+        private readonly twitchService: TwitchService
+    ) {}
+
+    @Get("login")
+    public async login(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
-            const url: URL = await twitchService.login();
+            const url: URL = await this.twitchService.login();
             res.redirect(url.toString());
         } catch (error) {
             next(error);
         }
     }
 
-    public async oauthCallback(req: Request, res: Response, next: NextFunction): Promise<void> {
+    @Get("oauth/callback")
+    public async oauthCallback(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
             const authorizationCode: string = req.query.code as string;
-            await twitchService.oauthCallback(authorizationCode);
+            await this.twitchService.oauthCallback(authorizationCode);
             res.redirect("/success");
         } catch (error) {
             next(error);
@@ -24,5 +33,3 @@ class TwitchController {
     }
 
 }
-
-export default new TwitchController();

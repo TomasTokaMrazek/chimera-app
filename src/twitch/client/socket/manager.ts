@@ -1,38 +1,42 @@
+import {Injectable} from "@nestjs/common";
+
 import WebSocket, {RawData} from "ws";
 import {CronJob} from "cron";
 
 import {AxiosResponse} from "@chimera/axios";
 
-import twitchRepository from "@chimera/twitch/repository/repository";
+import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {AccountIdView} from "@chimera/twitch/repository/views";
 
-import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
+import {TwitchHttpClientManager} from "@chimera/twitch/client/http/manager";
 import TwitchHttpClient from "@chimera/twitch/client/http/client";
 import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
 
 import TwitchSocketClient from "./client";
 import * as Message from "./dto/message";
 
-class TwitchSocketClientManager {
+@Injectable()
+export class TwitchSocketClientManager {
 
-    private cronJob: CronJob;
-    private socketClients: Map<number, TwitchSocketClient> = new Map();
+    constructor(
+        private readonly twitchRepository: TwitchRepository,
+        private readonly twitchHttpClientManager: TwitchHttpClientManager
+    ) {}
 
-    constructor() {
-        this.cronJob = new CronJob("0 * * * * *", async (): Promise<void> => {
-            try {
-                console.log("Cron Job - start");
-                await Promise.all(Array.from(this.socketClients.entries()).map(async ([twitchId, socketClient]: [number, TwitchSocketClient]): Promise<void> => {
-                    if (!await socketClient.isOpen()) {
-                        this.socketClients.delete(twitchId);
-                    }
-                }));
-                console.log("Cron Job - end");
-            } catch (e) {
-                console.error(e);
-            }
-        }, null, true);
-    }
+    private readonly socketClients: Map<number, TwitchSocketClient> = new Map();
+    private readonly cronJob: CronJob = new CronJob("0 * * * * *", async (): Promise<void> => {
+        try {
+            console.log("Cron Job - start");
+            await Promise.all(Array.from(this.socketClients.entries()).map(async ([twitchId, socketClient]: [number, TwitchSocketClient]): Promise<void> => {
+                if (!await socketClient.isOpen()) {
+                    this.socketClients.delete(twitchId);
+                }
+            }));
+            console.log("Cron Job - end");
+        } catch (e) {
+            console.error(e);
+        }
+    }, null, true);
 
     public async connectClient(twitchId: number, url: string): Promise<void> {
         const socket: WebSocket = new WebSocket(url);
@@ -83,8 +87,8 @@ class TwitchSocketClientManager {
     }
 
     public async disconnectClient(twitchId: number): Promise<void> {
-        const accountIdView: AccountIdView = await twitchRepository.getAccountIdById(twitchId);
-        const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(twitchId);
+        const accountIdView: AccountIdView = await this.twitchRepository.getAccountIdById(twitchId);
+        const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(twitchId);
 
         const requestParams: EventSub.GetEventSubSubscriptionRequestParams = {
             user_id: accountIdView.account_id
@@ -116,8 +120,8 @@ class TwitchSocketClientManager {
         const sessionId: string = message.payload.session.id;
 
         if (!this.socketClients.has(twitchId)) {
-            const accountIdView: AccountIdView = await twitchRepository.getAccountIdById(twitchId);
-            const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(twitchId);
+            const accountIdView: AccountIdView = await this.twitchRepository.getAccountIdById(twitchId);
+            const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(twitchId);
             const body: EventSub.CreateEventSubSubscriptionRequestBody = {
                 type: "channel.chat.message",
                 version: "1",
@@ -136,7 +140,7 @@ class TwitchSocketClientManager {
             }
         }
 
-        const socketClient: TwitchSocketClient = new TwitchSocketClient(socket, sessionId);
+        const socketClient: TwitchSocketClient = new TwitchSocketClient(this.twitchHttpClientManager, socket, sessionId);
         this.socketClients.set(twitchId, socketClient);
     }
 
@@ -161,5 +165,3 @@ class TwitchSocketClientManager {
         console.log(`Revocation: ${JSON.stringify(message)}`);
     }
 }
-
-export default new TwitchSocketClientManager();

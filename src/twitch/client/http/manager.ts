@@ -1,3 +1,5 @@
+import {Injectable} from '@nestjs/common';
+
 import TTLCache from "@isaacs/ttlcache";
 import {CronJob} from "cron";
 import {hoursToSeconds} from "date-fns";
@@ -5,12 +7,17 @@ import {hoursToSeconds} from "date-fns";
 import {AxiosResponse} from "@chimera/axios";
 import {Twitch} from "@prisma/client";
 
-import twitchRepository from "@chimera/twitch/repository/repository";
+import {TwitchRepository} from "@chimera/twitch/repository/repository";
 
 import TwitchHttpClient from "./client";
 import * as Token from "./dto/token";
 
-class TwitchHttpClientManager {
+@Injectable()
+export class TwitchHttpClientManager {
+
+    constructor(
+        private readonly twitchRepository: TwitchRepository
+    ) {}
 
     private readonly cronJob: CronJob = new CronJob("0 0 * * * *", async (): Promise<void> => {
         try {
@@ -31,7 +38,7 @@ class TwitchHttpClientManager {
 
     public async getHttpClient(twitchId: number): Promise<TwitchHttpClient> {
         const accessToken: string = this.tokenCache.get(twitchId) ?? await (async (): Promise<string> => {
-            const twitch: Twitch = await twitchRepository.getById(twitchId)
+            const twitch: Twitch = await this.twitchRepository.getById(twitchId)
             return twitch.access_token ?? ((): string => {
                 throw new Error(`Twitch ID '${twitchId}' does not have Access Token.`);
             })();
@@ -48,23 +55,21 @@ class TwitchHttpClientManager {
         const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(accessToken);
         const validationResponse: AxiosResponse<Token.TokenValidationResponseBody> = await httpClient.getOauthTokenValidation();
         if (validationResponse.status !== 200 || validationResponse.data.expires_in < 7200) {
-            const twitch: Twitch = await twitchRepository.getById(twitchId);
+            const twitch: Twitch = await this.twitchRepository.getById(twitchId);
             const refreshToken: string = twitch.refresh_token ?? ((): string => {
                 throw new Error(`Twitch ID '${twitchId}' does not have Refresh Token.`);
             })();
             const refreshResponse: AxiosResponse<Token.TokenRefreshResponseBody> = await httpClient.getOauthTokenByRefresh(refreshToken);
             if (refreshResponse.status !== 200) {
-                await twitchRepository.updateTokens(twitchId);
+                await this.twitchRepository.updateTokens(twitchId);
                 this.tokenCache.delete(twitchId);
             } else {
                 const newAccessToken: string = refreshResponse.data.access_token;
                 const newRefreshToken: string = refreshResponse.data.refresh_token;
-                await twitchRepository.updateTokens(twitchId, accessToken, newRefreshToken);
+                await this.twitchRepository.updateTokens(twitchId, accessToken, newRefreshToken);
                 this.tokenCache.set(twitchId, newAccessToken);
             }
         }
     }
 
 }
-
-export default new TwitchHttpClientManager();

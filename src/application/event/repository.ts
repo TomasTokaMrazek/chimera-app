@@ -1,13 +1,20 @@
-import prisma from "@chimera/prisma";
+import {Injectable} from "@nestjs/common";
+
+import {PrismaService} from "@chimera/prisma";
 
 import {EventSynchronization} from "@prisma/client";
 
 import {EventSyncServiceType} from "./dto";
 
-class ApplicationEventRepository {
+@Injectable()
+export class ApplicationEventRepository {
+
+    constructor(
+        private readonly prisma: PrismaService
+    ) {}
 
     public async get(userId: number): Promise<EventSynchronization[]> {
-        return prisma.eventSynchronization
+        return this.prisma.eventSynchronization
             .findMany({
                 where: {
                     user_id: userId
@@ -16,7 +23,7 @@ class ApplicationEventRepository {
     }
 
     public async getByFrom(userId: number, from: EventSyncServiceType): Promise<EventSynchronization[]> {
-        return prisma.eventSynchronization
+        return this.prisma.eventSynchronization
             .findMany({
                 where: {
                     user_id: userId,
@@ -26,7 +33,7 @@ class ApplicationEventRepository {
     }
 
     public async create(userId: number, from: EventSyncServiceType, to: EventSyncServiceType): Promise<EventSynchronization> {
-        return prisma.eventSynchronization
+        return this.prisma.eventSynchronization
             .create({
                 data: {
                     user_id: userId,
@@ -37,7 +44,7 @@ class ApplicationEventRepository {
     }
 
     public async delete(userId: number, from: EventSyncServiceType, to: EventSyncServiceType): Promise<EventSynchronization> {
-        return prisma.eventSynchronization
+        return this.prisma.eventSynchronization
             .delete({
                 where: {
                     user_id_from_to: {
@@ -50,5 +57,3 @@ class ApplicationEventRepository {
     }
 
 }
-
-export default new ApplicationEventRepository();

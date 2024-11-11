@@ -1,21 +1,30 @@
+import {Controller, Get, Next, Post, Req, Res} from "@nestjs/common";
+
 import {NextFunction, Request, Response} from "express";
 
-import agraelusService from "./service";
+import {ApplicationAgraelusService} from "./service";
 
-class AgraelusController {
+@Controller("application/agraelus")
+export class ApplicationAgraelusController {
 
-    public async connect(req: Request, res: Response, next: NextFunction): Promise<void> {
+    constructor(
+        private readonly agraelusService: ApplicationAgraelusService
+    ) {}
+
+    @Post("connect")
+    public async connect(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
-            await agraelusService.connect();
+            await this.agraelusService.connect();
             res.redirect("/success");
         } catch (error) {
             next(error);
         }
     }
 
-    public async disconnect(req: Request, res: Response, next: NextFunction): Promise<void> {
+    @Post("disconnect")
+    public async disconnect(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
-            await agraelusService.disconnect();
+            await this.agraelusService.disconnect();
             res.redirect("/success");
         } catch (error) {
             next(error);
@@ -23,5 +32,3 @@ class AgraelusController {
     }
 
 }
-
-export default new AgraelusController();

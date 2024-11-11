@@ -1,17 +1,21 @@
+import {Injectable} from "@nestjs/common";
+
 import {AxiosResponse} from "@chimera/axios";
 
-import twitchRepository from "@chimera/twitch/repository/repository";
+import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {UserView} from "@chimera/twitch/repository/views";
 import {Twitch, User, StreamLabs} from "@prisma/client";
 
 import {AccountIds, OauthTokens, SocketToken} from "./types";
-import streamLabsRepository from "./repository/repository";
+import {StreamLabsRepository} from "./repository/repository";
 import {IdView} from "./repository/views";
 
 import StreamLabsHttpClient from "./client/http/client";
 import * as HttpDto from "./client/http/dto";
 
-import StreamLabsSocketClient from "./client/socket/client";
+import {StreamLabsSocketClient} from "./client/socket/client";
+
+import {ApplicationEventManager} from "@chimera/application/event/manager";
 
 import configuration from "@chimera/configuration";
 
@@ -19,10 +23,17 @@ const streamLabsOauthUrl: string = configuration.streamLabs.oauthUrl;
 const redirectUri: string = configuration.streamLabs.redirectUri;
 const clientID: string = configuration.streamLabs.clientId;
 
-class StreamLabsService {
+@Injectable()
+export class StreamLabsService {
 
-    private httpClients: Map<number, StreamLabsHttpClient> = new Map();
-    private socketClients: Map<number, StreamLabsSocketClient> = new Map();
+    constructor(
+        private readonly streamLabsRepository: StreamLabsRepository,
+        private readonly twitchRepository: TwitchRepository,
+        private readonly applicationEventManager: ApplicationEventManager
+    ) {}
+
+    private readonly httpClients: Map<number, StreamLabsHttpClient> = new Map();
+    private readonly socketClients: Map<number, StreamLabsSocketClient> = new Map();
 
     public async login(): Promise<URL> {
         const url: URL = new URL(streamLabsOauthUrl + "/authorize");
@@ -42,7 +53,7 @@ class StreamLabsService {
     }
 
     public async connect(twitchAccountId: string): Promise<void> {
-        const userView: UserView = await twitchRepository.getUserByAccountId(twitchAccountId);
+        const userView: UserView = await this.twitchRepository.getUserByAccountId(twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${twitchAccountId}' is not associated with User.`);
         })();
@@ -50,7 +61,7 @@ class StreamLabsService {
             throw new Error(`Twitch Account '${twitchAccountId}' is not associated with StreamLabs account.`);
         })();
 
-        const streamLabs: StreamLabs = await streamLabsRepository.getById(streamLabsId);
+        const streamLabs: StreamLabs = await this.streamLabsRepository.getById(streamLabsId);
         const accessToken: string = streamLabs.access_token ?? ((): string => {
             throw new Error(`StreamLabs Account '${streamLabs.account_id}' does not have Authorization token`);
         })();
@@ -61,7 +72,7 @@ class StreamLabsService {
         const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(accessToken);
         this.httpClients.set(user.id, httpclient);
 
-        const socketClient: StreamLabsSocketClient = StreamLabsSocketClient.createInstance(user, socketToken);
+        const socketClient: StreamLabsSocketClient = StreamLabsSocketClient.createInstance(this.applicationEventManager, user, socketToken);
         this.socketClients.set(user.id, socketClient);
     }
 
@@ -116,12 +127,10 @@ class StreamLabsService {
     }
 
     private async setTokens(accountIds: AccountIds, oauthTokens: OauthTokens, socketToken: SocketToken): Promise<StreamLabs> {
-        const twitch: Twitch = await twitchRepository.getOrInsertByAccountId(accountIds.twitch);
-        const streamLabsId: IdView = await streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs, twitch.id);
+        const twitch: Twitch = await this.twitchRepository.getOrInsertByAccountId(accountIds.twitch);
+        const streamLabsId: IdView = await this.streamLabsRepository.getOrCreateStreamLabsId(accountIds.streamLabs, twitch.id);
 
-        return await streamLabsRepository.updateTokens(streamLabsId.id, oauthTokens.accessToken, oauthTokens.refreshToken, socketToken.socketToken);
+        return await this.streamLabsRepository.updateTokens(streamLabsId.id, oauthTokens.accessToken, oauthTokens.refreshToken, socketToken.socketToken);
     }
 
 }
-
-export default new StreamLabsService();

@@ -1,6 +1,6 @@
 import io, {Socket} from "socket.io-client";
 
-import eventManager, {Donation} from "@chimera/application/event/manager";
+import {ApplicationEventManager, Donation} from "@chimera/application/event/manager";
 import {EventSyncService} from "@chimera/application/event/dto";
 
 import {User} from "@prisma/client";
@@ -11,9 +11,9 @@ import configuration from "@chimera/configuration";
 
 const websocketUrl: string = configuration.streamLabs.websocketUrl;
 
-class StreamLabsSocketClient {
+export class StreamLabsSocketClient {
 
-    static createInstance(user: User, socketToken: string): StreamLabsSocketClient {
+    static createInstance(eventManager: ApplicationEventManager, user: User, socketToken: string): StreamLabsSocketClient {
         const socket: Socket<Dto.ServerToClientEvents, any> = io(`${websocketUrl}?token=${socketToken}`, {
             transports: ["websocket"]
         });
@@ -52,5 +52,3 @@ class StreamLabsSocketClient {
     }
 
 }
-
-export default StreamLabsSocketClient;

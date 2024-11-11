@@ -1,13 +1,20 @@
-import prisma from "@chimera/prisma";
+import {Injectable} from "@nestjs/common";
+
+import {PrismaService} from "@chimera/prisma";
 
 import {StreamElements} from "@prisma/client";
 
 import {IdView} from "./views";
 
-class StreamElementsRepository {
+@Injectable()
+export class StreamElementsRepository {
+
+    constructor(
+        private readonly prisma: PrismaService
+    ) {}
 
     public async getById(id: number): Promise<StreamElements> {
-        return prisma.streamElements
+        return this.prisma.streamElements
             .findUniqueOrThrow({
                 where: {
                     id: id
@@ -16,7 +23,7 @@ class StreamElementsRepository {
     }
 
     public async getOrCreateStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
-        return prisma.streamElements
+        return this.prisma.streamElements
             .upsert({
                 where: {
                     account_id: accountId
@@ -37,7 +44,7 @@ class StreamElementsRepository {
     }
 
     public async updateTokens(id: number, jwt: string): Promise<StreamElements> {
-        return prisma.streamElements
+        return this.prisma.streamElements
             .update({
                 where: {
                     id: id
@@ -49,5 +56,3 @@ class StreamElementsRepository {
     }
 
 }
-
-export default new StreamElementsRepository();

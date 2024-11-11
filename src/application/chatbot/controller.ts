@@ -1,47 +1,55 @@
+import {Controller, Get, Next, Post, Req, Res} from "@nestjs/common";
+
 import {NextFunction, Request, Response} from "express";
 
-import chatbotService from "./service";
+import {ApplicationChatbotService} from "./service";
 
-class ChatbotController {
+@Controller("application/chatbot")
+export class ApplicationChatbotController {
 
-    public async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    constructor(
+        private readonly chatbotService: ApplicationChatbotService
+    ) {}
+
+    @Get("login")
+    public async login(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
-            const url: URL = await chatbotService.login();
+            const url: URL = await this.chatbotService.login();
             res.redirect(url.toString());
         } catch (error) {
             next(error);
         }
     }
 
-    public async oauthCallback(req: Request, res: Response, next: NextFunction): Promise<void> {
+    @Get("oauth/callback")
+    public async oauthCallback(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
             const authorizationCode: string = req.query.code as string;
-            await chatbotService.oauthCallback(authorizationCode);
+            await this.chatbotService.oauthCallback(authorizationCode);
             res.redirect("/success");
         } catch (error) {
             next(error);
         }
     }
 
-    public async connect(req: Request, res: Response, next: NextFunction): Promise<void> {
+    @Post("connect")
+    public async connect(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
-            await chatbotService.connect();
+            await this.chatbotService.connect();
             res.redirect("/success");
         } catch (error) {
             next(error);
         }
     }
 
-    public async disconnect(req: Request, res: Response, next: NextFunction): Promise<void> {
+    @Post("disconnect")
+    public async disconnect(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
-            await chatbotService.disconnect();
+            await this.chatbotService.disconnect();
             res.redirect("/success");
         } catch (error) {
             next(error);
         }
     }
-
 
 }
-
-export default new ChatbotController();

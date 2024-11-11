@@ -1,35 +1,45 @@
+import {Controller, Post, Get, Req, Res, Next} from "@nestjs/common";
+
 import {NextFunction, Request, Response} from "express";
 
-import eventService from "./service";
+import {ApplicationEventService} from "./service";
 import {EventSyncRequestType} from "./dto";
 import {EventSynchronization} from "@prisma/client";
 
-class EventController {
+@Controller("application/events")
+export class ApplicationEventController {
 
-    public async enable(req: Request, res: Response, next: NextFunction): Promise<void> {
+    constructor(
+        private readonly eventService: ApplicationEventService
+    ) {}
+
+    @Post("enable")
+    public async enable(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
             const body: EventSyncRequestType = req.body;
-            await eventService.enable(body);
+            await this.eventService.enable(body);
             res.redirect("/success");
         } catch (error) {
             next(error);
         }
     }
 
-    public async disable(req: Request, res: Response, next: NextFunction): Promise<void> {
+    @Post("disable")
+    public async disable(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
             const body: EventSyncRequestType = req.body;
-            await eventService.disable(body);
+            await this.eventService.disable(body);
             res.redirect("/success");
         } catch (error) {
             next(error);
         }
     }
 
-    public async get(req: Request, res: Response, next: NextFunction): Promise<void> {
+    @Get("get")
+    public async get(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
         try {
             const twitchAccountId: string = req.query.twitchAccountId as string;
-            const eventSynchronizations: EventSynchronization[] = await eventService.get(twitchAccountId);
+            const eventSynchronizations: EventSynchronization[] = await this.eventService.get(twitchAccountId);
             res.status(200).send(eventSynchronizations);
         } catch (error) {
             next(error);
@@ -37,5 +47,3 @@ class EventController {
     }
 
 }
-
-export default new EventController();

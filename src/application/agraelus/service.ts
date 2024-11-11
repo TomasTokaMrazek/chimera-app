@@ -1,18 +1,20 @@
+import {Injectable} from "@nestjs/common";
+
 import WebSocket from "ws";
-import { isValid, differenceInSeconds, format } from "date-fns";
-import { cs } from "date-fns/locale";
+import {isValid, differenceInSeconds, format} from "date-fns";
+import {cs} from "date-fns/locale";
 
 import {AxiosResponse} from "@chimera/axios";
 
-import twitchRepository from "@chimera/twitch/repository/repository";
+import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {IdView} from "@chimera/twitch/repository/views";
 
-import twitchSocketClientManager from "@chimera/twitch/client/socket/manager";
+import {TwitchSocketClientManager} from "@chimera/twitch/client/socket/manager";
 import TwitchSocketClient, {HandleMessageFunction} from "@chimera/twitch/client/socket/client";
 import * as Message from "@chimera/twitch/client/socket/dto/message";
 import * as Event from "@chimera/twitch/client/socket/dto/event";
 
-import twitchHttpClientManager from "@chimera/twitch/client/http/manager";
+import {TwitchHttpClientManager} from "@chimera/twitch/client/http/manager";
 import TwitchHttpClient from "@chimera/twitch/client/http/client";
 import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
 import * as User from "@chimera/twitch/client/http/dto/user";
@@ -34,10 +36,17 @@ const wheelOfNamesUrl: string = configuration.wheelOfNames.url;
 
 const cekybotAccountId: string = "807488577"; //cekybot2
 const tokaAccountId: string = "69887790"; //TokaTheFirst
-const agraelusAccountId: string = "36620767" //Agraelus
-const appAccountId: string = "1119298268" //ChimeraApp
+const agraelusAccountId: string = "36620767"; //Agraelus
+const appAccountId: string = "1119298268"; //ChimeraApp
 
-class AgraelusService {
+@Injectable()
+export class ApplicationAgraelusService {
+
+    constructor(
+        private readonly twitchRepository: TwitchRepository,
+        private readonly twitchSocketClientManager: TwitchSocketClientManager,
+        private readonly twitchHttpClientManager: TwitchHttpClientManager
+    ) {}
 
     private firstMessage: Date = new Date(NaN);
     private numberOfUsers: number = 0;
@@ -92,8 +101,8 @@ class AgraelusService {
                         const path: string = await this.wheelOfNames();
                         const url: string = wheelOfNamesUrl.concat("/").concat(path);
                         console.log(`WheelOfNames URL: ${url}`);
-                        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
-                        const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(idView.id);
+                        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
+                        const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(idView.id);
                         const body: Chat.SendChatMessageRequestBody = {
                             broadcaster_id: agraelusAccountId,
                             sender_id: userAccountId,
@@ -113,8 +122,8 @@ class AgraelusService {
             return;
         }
 
-        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
-        const socketClient: TwitchSocketClient = await twitchSocketClientManager.getSocketClient(idView.id);
+        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
+        const socketClient: TwitchSocketClient = await this.twitchSocketClientManager.getSocketClient(idView.id);
 
         const sessionId: string = socketClient.sessionId;
 
@@ -136,8 +145,8 @@ class AgraelusService {
     }
 
     public async disconnect(): Promise<void> {
-        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
-        const socketClient: TwitchSocketClient = await twitchSocketClientManager.getSocketClient(idView.id);
+        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
+        const socketClient: TwitchSocketClient = await this.twitchSocketClientManager.getSocketClient(idView.id);
 
         const requestParams: EventSub.DeleteEventSubSubscriptionRequestParams = {
             id: this.subscriptionId
@@ -155,8 +164,8 @@ class AgraelusService {
     }
 
     private async wheelOfNames(): Promise<string> {
-        const idView: IdView = await twitchRepository.getIdByAccountId(userAccountId);
-        const httpClient: TwitchHttpClient = await twitchHttpClientManager.getHttpClient(idView.id);
+        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
+        const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(idView.id);
 
         const uniqueUsers: Set<string> = new Set(this.users.filter((user: string) => !/\W/.test(user)));
 
@@ -180,7 +189,7 @@ class AgraelusService {
 
         const twitchUsers: User.GetUsersResponseData[] = getUsersResponses.flatMap((response: AxiosResponse<User.GetUsersResponseBody>) => {
             return response.data.data;
-        })
+        });
 
         const getUsersChatColorResponses: AxiosResponse<Chat.GetUsersChatColorResponseBody>[] = await Promise.all(
             chunk(100)(twitchUsers).map((chunkUsers: User.GetUsersResponseData[]): Promise<AxiosResponse<Chat.GetUsersChatColorResponseBody>> => {
@@ -193,7 +202,7 @@ class AgraelusService {
 
         const twitchUsersWithColor: Chat.GetUsersChatColorResponseData[] = getUsersChatColorResponses.flatMap((response: AxiosResponse<Chat.GetUsersChatColorResponseBody>) => {
             return response.data.data;
-        })
+        });
 
         const entries: Wheel.Entry[] = Array.from(twitchUsersWithColor)
             .map((twitchUserWithColor: Chat.GetUsersChatColorResponseData) => {
@@ -207,7 +216,7 @@ class AgraelusService {
 
         const body: Wheel.PostRequest = {
             wheelConfig: {
-                description: "Točka pro agrBajs ze dne " + format(new Date(), "EEEE, d MMMM yyyy", { locale: cs }),
+                description: "Točka pro agrBajs ze dne " + format(new Date(), "EEEE, d MMMM yyyy", {locale: cs}),
                 title: "Agraelus",
                 type: Wheel.Type.COLOR,
                 spinTime: 5,
@@ -231,5 +240,3 @@ class AgraelusService {
     }
 
 }
-
-export default new AgraelusService();
