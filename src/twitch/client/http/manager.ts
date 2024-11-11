@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {Injectable, Logger} from "@nestjs/common";
 
 import TTLCache from "@isaacs/ttlcache";
 import {CronJob} from "cron";
@@ -19,15 +19,17 @@ export class TwitchHttpClientManager {
         private readonly twitchRepository: TwitchRepository
     ) {}
 
+    private readonly logger: Logger = new Logger(TwitchHttpClientManager.name);
+
     private readonly cronJob: CronJob = new CronJob("0 0 * * * *", async (): Promise<void> => {
         try {
-            console.log("Cron Job - start");
+            this.logger.log("Cron Job - start");
             await Promise.all(Array.from(this.tokenCache.entries()).map(async ([twitchId, accessToken]: [number, string]): Promise<void> => {
                 return await this.validateAccessToken(twitchId, accessToken);
             }));
-            console.log("Cron Job - end");
+            this.logger.log("Cron Job - end");
         } catch (e) {
-            console.error(e);
+            this.logger.error(e);
         }
     }, null, true);
 
@@ -38,7 +40,7 @@ export class TwitchHttpClientManager {
 
     public async getHttpClient(twitchId: number): Promise<TwitchHttpClient> {
         const accessToken: string = this.tokenCache.get(twitchId) ?? await (async (): Promise<string> => {
-            const twitch: Twitch = await this.twitchRepository.getById(twitchId)
+            const twitch: Twitch = await this.twitchRepository.getById(twitchId);
             return twitch.access_token ?? ((): string => {
                 throw new Error(`Twitch ID '${twitchId}' does not have Access Token.`);
             })();

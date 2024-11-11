@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 
 import WebSocket, {RawData} from "ws";
 import {CronJob} from "cron";
@@ -23,18 +23,19 @@ export class TwitchSocketClientManager {
         private readonly twitchHttpClientManager: TwitchHttpClientManager
     ) {}
 
+    private readonly logger: Logger = new Logger(TwitchSocketClientManager.name);
     private readonly socketClients: Map<number, TwitchSocketClient> = new Map();
     private readonly cronJob: CronJob = new CronJob("0 * * * * *", async (): Promise<void> => {
         try {
-            console.log("Cron Job - start");
+            this.logger.log("Cron Job - start");
             await Promise.all(Array.from(this.socketClients.entries()).map(async ([twitchId, socketClient]: [number, TwitchSocketClient]): Promise<void> => {
                 if (!await socketClient.isOpen()) {
                     this.socketClients.delete(twitchId);
                 }
             }));
-            console.log("Cron Job - end");
+            this.logger.log("Cron Job - end");
         } catch (e) {
-            console.error(e);
+            this.logger.error(e);
         }
     }, null, true);
 
@@ -42,15 +43,15 @@ export class TwitchSocketClientManager {
         const socket: WebSocket = new WebSocket(url);
 
         socket.on("error", (error: Error): void => {
-            console.error(`[Twitch] Websocket server threw an error.`, error);
+            this.logger.error(`[Twitch] Websocket server threw an error.`, error);
         });
 
         socket.on("open", (): void => {
-            console.log(`[Twitch] Connected to the websocket server.`);
+            this.logger.log(`[Twitch] Connected to the websocket server.`);
         });
 
         socket.on("close", (code: number, reason: Buffer): void => {
-            console.log(`[Twitch] Disconnected from the websocket server. Code: ${code}, Reason: ${reason}`);
+            this.logger.log(`[Twitch] Disconnected from the websocket server. Code: ${code}, Reason: ${reason}`);
         });
 
         socket.on("message", async (data: RawData): Promise<void> => {
@@ -145,7 +146,7 @@ export class TwitchSocketClientManager {
     }
 
     private async sessionKeepalive(message: Message.KeepaliveMessage): Promise<void> {
-        console.log(`Session Keepalive: ${JSON.stringify(message)}`);
+        this.logger.log(`Session Keepalive: ${JSON.stringify(message)}`);
     }
 
     private async sessionReconnect(message: Message.ReconnectMessage, twitchId: number): Promise<void> {
@@ -158,10 +159,10 @@ export class TwitchSocketClientManager {
     }
 
     private async notification(message: Message.NotificationMessage): Promise<void> {
-        console.log(`Notification: ${JSON.stringify(message)}`);
+        this.logger.log(`Notification: ${JSON.stringify(message)}`);
     }
 
     private async revocation(message: Message.RevocationMessage): Promise<void> {
-        console.log(`Revocation: ${JSON.stringify(message)}`);
+        this.logger.log(`Revocation: ${JSON.stringify(message)}`);
     }
 }

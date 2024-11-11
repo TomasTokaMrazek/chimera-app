@@ -1,5 +1,7 @@
 import {Module} from "@nestjs/common";
 
+import {HttpModule} from "@nestjs/axios";
+
 import {StreamLabsController} from "@chimera/streamlabs/controller";
 import {StreamLabsService} from "@chimera/streamlabs/service";
 import {StreamLabsRepository} from "@chimera/streamlabs/repository/repository";
@@ -8,7 +10,7 @@ import {TwitchModule} from "@chimera/twitch/module";
 import {ApplicationEventModule} from "@chimera/application/event/module";
 
 @Module({
-    imports: [TwitchModule, ApplicationEventModule],
+    imports: [HttpModule, TwitchModule, ApplicationEventModule],
     controllers: [StreamLabsController],
     providers: [StreamLabsService, StreamLabsRepository],
     exports: [StreamLabsService]

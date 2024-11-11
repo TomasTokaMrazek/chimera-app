@@ -3,8 +3,6 @@ import {APP_PIPE} from "@nestjs/core";
 
 import {ZodValidationPipe} from "nestjs-zod";
 
-import {AppController} from "./app.controller";
-
 import {PrismaModule} from "prisma.module";
 import {TwitchModule} from "@chimera/twitch/module";
 import {StreamElementsModule} from "@chimera/streamelements/module";
@@ -15,7 +13,6 @@ import {ApplicationAgraelusModule} from "@chimera/application/agraelus/module";
 
 @Module({
     imports: [PrismaModule, TwitchModule, StreamElementsModule, StreamLabsModule, ApplicationChatbotModule, ApplicationEventModule, ApplicationAgraelusModule],
-    controllers: [AppController],
     providers: [
         {
             provide: APP_PIPE,

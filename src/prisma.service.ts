@@ -1,4 +1,4 @@
-import {Injectable, OnModuleInit, OnModuleDestroy} from "@nestjs/common";
+import {Injectable, OnModuleInit, OnModuleDestroy, Logger} from "@nestjs/common";
 
 import {Prisma, PrismaClient} from "@prisma/client";
 
@@ -16,11 +16,13 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, "que
         });
     }
 
+    private readonly logger: Logger = new Logger(PrismaService.name);
+
     async onModuleInit() {
         this.$on("query", (event: Prisma.QueryEvent) => {
-            console.log(`Query: ${event.query}`);
-            console.log(`Params: ${event.params}`);
-            console.log(`Duration: ${event.duration}ms`);
+            this.logger.log(`Query: ${event.query}`);
+            this.logger.log(`Params: ${event.params}`);
+            this.logger.log(`Duration: ${event.duration}ms`);
         });
 
         await this.$connect();

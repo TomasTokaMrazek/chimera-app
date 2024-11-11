@@ -1,6 +1,4 @@
-import {Controller, Get, Post, Req, Res, Next} from "@nestjs/common";
-
-import {NextFunction, Request, Response} from "express";
+import {Body, Controller, Get, Post, Query, Redirect} from "@nestjs/common";
 
 import {StreamLabsService} from "./service";
 
@@ -11,35 +9,21 @@ export class StreamLabsController {
         private readonly streamLabsService: StreamLabsService
     ) {}
 
+    @Redirect()
     @Get("login")
-    public async login(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
-        try {
-            const url: URL = await this.streamLabsService.login();
-            res.redirect(url.toString());
-        } catch (error) {
-            next(error);
-        }
+    public async login(): Promise<{ url: URL }> {
+        const url: URL = await this.streamLabsService.login();
+        return {url: url};
     }
 
     @Get("oauth/callback")
-    public async oauthCallback(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
-        try {
-            const authorizationCode: string = req.query.code as string;
-            await this.streamLabsService.oauthCallback(authorizationCode);
-            res.redirect("/success");
-        } catch (error) {
-            next(error);
-        }
+    public async oauthCallback(@Query() code: string): Promise<void> {
+        await this.streamLabsService.oauthCallback(code);
     }
 
     @Post("connect")
-    public async connect(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
-        try {
-            const twitchAccountId: string = req.body.twitchAccountId as string;
-            await this.streamLabsService.connect(twitchAccountId);
-            res.redirect("/success");
-        } catch (error) {
-            next(error);
-        }
+    public async connect(@Body() body: { twitchAccountId: string }): Promise<void> {
+        const twitchAccountId: string = body.twitchAccountId;
+        await this.streamLabsService.connect(twitchAccountId);
     }
 }

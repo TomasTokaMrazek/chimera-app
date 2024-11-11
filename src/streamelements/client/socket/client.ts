@@ -1,3 +1,5 @@
+import {Logger} from "@nestjs/common";
+
 import io, {Socket} from "socket.io-client";
 
 import configuration from "@chimera/configuration";
@@ -7,29 +9,31 @@ const websocketUrl: string = configuration.streamElements.websocketUrl;
 
 class StreamElementsSocketClient {
 
+    private static readonly logger: Logger = new Logger(StreamElementsSocketClient.name);
+
     static createInstance(user: User, jwt: string): StreamElementsSocketClient {
         const socket: Socket = io(`${websocketUrl}`, {
             transports: ["websocket"]
         });
         socket.on("connect", (): void => {
-            console.log("[StreamElements] Connected to the websocket server.");
+            this.logger.log("[StreamElements] Connected to the websocket server.");
             socket.emit("authenticate", {method: "jwt", token: jwt});
         });
 
         socket.on("authenticated", (): void => {
-            console.log("[StreamElements] Authenticated to the websocket server.");
+            this.logger.log("[StreamElements] Authenticated to the websocket server.");
         });
 
         socket.on("unauthorized", (): void => {
-            console.log("[StreamElements] Unable to authenticate to the websocket server.");
+            this.logger.log("[StreamElements] Unable to authenticate to the websocket server.");
         });
 
         socket.on("disconnect", (): void => {
-            console.log("[StreamElements] Disconnected from the websocket server.");
+            this.logger.log("[StreamElements] Disconnected from the websocket server.");
         });
 
         socket.onAny((eventName, ...args: any[]): void => {
-            console.log(`[StreamElements] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
+            this.logger.log(`[StreamElements] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
         });
 
         return new StreamElementsSocketClient();

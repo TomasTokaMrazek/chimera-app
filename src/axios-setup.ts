@@ -1,6 +1,9 @@
-import axios, {AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig, AxiosResponse} from "axios";
+import axios, {AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig, AxiosResponse, Axios} from "axios";
+import {Logger} from "@nestjs/common";
 
 const instance: AxiosInstance = axios.create();
+
+const logger: Logger = new Logger(Axios.name);
 
 instance.interceptors.request.use(async (request: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
     const message: {} = {
@@ -11,7 +14,7 @@ instance.interceptors.request.use(async (request: InternalAxiosRequestConfig): P
         "params": request.params
     };
 
-    console.log("Request:\n", JSON.stringify(message, null, 2));
+    logger.log("Request:\n", JSON.stringify(message, null, 2));
     return request;
 });
 
@@ -22,7 +25,7 @@ instance.interceptors.response.use(async (response: AxiosResponse): Promise<Axio
         "data": response.data
     };
 
-    console.log("Response:\n", JSON.stringify(message, null, 2));
+    logger.log("Response:\n", JSON.stringify(message, null, 2));
     return response;
 });
 

@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 
 import WebSocket from "ws";
 import {isValid, differenceInSeconds, format} from "date-fns";
@@ -47,6 +47,8 @@ export class ApplicationAgraelusService {
         private readonly twitchSocketClientManager: TwitchSocketClientManager,
         private readonly twitchHttpClientManager: TwitchHttpClientManager
     ) {}
+
+    private readonly logger: Logger = new Logger(ApplicationAgraelusService.name);
 
     private firstMessage: Date = new Date(NaN);
     private numberOfUsers: number = 0;
@@ -97,10 +99,10 @@ export class ApplicationAgraelusService {
                     }
 
                     if (this.users.length === this.numberOfUsers) {
-                        console.log(`WheelOfNames | Number: ${this.numberOfUsers}, Users: ${this.users}`);
+                        this.logger.log(`WheelOfNames | Number: ${this.numberOfUsers}, Users: ${this.users}`);
                         const path: string = await this.wheelOfNames();
                         const url: string = wheelOfNamesUrl.concat("/").concat(path);
-                        console.log(`WheelOfNames URL: ${url}`);
+                        this.logger.log(`WheelOfNames URL: ${url}`);
                         const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
                         const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(idView.id);
                         const body: Chat.SendChatMessageRequestBody = {
@@ -141,7 +143,7 @@ export class ApplicationAgraelusService {
         };
 
         this.subscriptionId = await socketClient.subscribe(idView.id, requestBody, this.handleMessage);
-        console.log(`Agraelus Spin Wheel event subscription id: ${this.subscriptionId}`);
+        this.logger.log(`Agraelus Spin Wheel event subscription id: ${this.subscriptionId}`);
     }
 
     public async disconnect(): Promise<void> {

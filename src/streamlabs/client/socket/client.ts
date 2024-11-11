@@ -1,3 +1,5 @@
+import {Logger} from "@nestjs/common";
+
 import io, {Socket} from "socket.io-client";
 
 import {ApplicationEventManager, Donation} from "@chimera/application/event/manager";
@@ -13,16 +15,18 @@ const websocketUrl: string = configuration.streamLabs.websocketUrl;
 
 export class StreamLabsSocketClient {
 
+    private static readonly logger: Logger = new Logger(StreamLabsSocketClient.name);
+
     static createInstance(eventManager: ApplicationEventManager, user: User, socketToken: string): StreamLabsSocketClient {
         const socket: Socket<Dto.ServerToClientEvents, any> = io(`${websocketUrl}?token=${socketToken}`, {
             transports: ["websocket"]
         });
         socket.on("connect", (): void => {
-            console.log("[StreamLabs] Connected to the websocket server.");
+            this.logger.log("[StreamLabs] Connected to the websocket server.");
         });
 
         socket.on("disconnect", (): void => {
-            console.log("[StreamLabs] Disconnected from the websocket server.");
+            this.logger.log("[StreamLabs] Disconnected from the websocket server.");
         });
 
         socket.on("event", (event: Dto.TipEvent): void => {
@@ -38,7 +42,7 @@ export class StreamLabsSocketClient {
 
                         return await eventManager.syncDonations(EventSyncService.enum.STREAMLABS, user, donation);
                     })).catch(error => {
-                        console.error(`[StreamLabs] Error processing event.`, error);
+                        this.logger.error(`[StreamLabs] Error processing event.`, error);
                     });
                     break;
                 }
@@ -46,7 +50,7 @@ export class StreamLabsSocketClient {
         });
 
         socket.onAny((eventName, ...args: any[]): void => {
-            console.log(`[StreamLabs] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
+            this.logger.log(`[StreamLabs] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
         });
         return new StreamLabsSocketClient();
     }

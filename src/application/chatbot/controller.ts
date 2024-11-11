@@ -1,6 +1,4 @@
-import {Controller, Get, Next, Post, Req, Res} from "@nestjs/common";
-
-import {NextFunction, Request, Response} from "express";
+import {Controller, Get, Post, Query, Redirect} from "@nestjs/common";
 
 import {ApplicationChatbotService} from "./service";
 
@@ -11,45 +9,26 @@ export class ApplicationChatbotController {
         private readonly chatbotService: ApplicationChatbotService
     ) {}
 
+    @Redirect()
     @Get("login")
-    public async login(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
-        try {
-            const url: URL = await this.chatbotService.login();
-            res.redirect(url.toString());
-        } catch (error) {
-            next(error);
-        }
+    public async login(): Promise<{ url: URL }> {
+        const url: URL = await this.chatbotService.login();
+        return {url: url};
     }
 
     @Get("oauth/callback")
-    public async oauthCallback(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
-        try {
-            const authorizationCode: string = req.query.code as string;
-            await this.chatbotService.oauthCallback(authorizationCode);
-            res.redirect("/success");
-        } catch (error) {
-            next(error);
-        }
+    public async oauthCallback(@Query() code: string): Promise<void> {
+        await this.chatbotService.oauthCallback(code);
     }
 
     @Post("connect")
-    public async connect(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
-        try {
-            await this.chatbotService.connect();
-            res.redirect("/success");
-        } catch (error) {
-            next(error);
-        }
+    public async connect(): Promise<void> {
+        await this.chatbotService.connect();
     }
 
     @Post("disconnect")
-    public async disconnect(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction): Promise<void> {
-        try {
-            await this.chatbotService.disconnect();
-            res.redirect("/success");
-        } catch (error) {
-            next(error);
-        }
+    public async disconnect(): Promise<void> {
+        await this.chatbotService.disconnect();
     }
 
 }
