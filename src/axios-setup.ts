@@ -14,7 +14,7 @@ instance.interceptors.request.use(async (request: InternalAxiosRequestConfig): P
         "params": request.params
     };
 
-    logger.log("Request:\n", JSON.stringify(message, null, 2));
+    logger.log(`Request: ${JSON.stringify(message, null, 2)}`);
     return request;
 });
 
@@ -25,7 +25,7 @@ instance.interceptors.response.use(async (response: AxiosResponse): Promise<Axio
         "data": response.data
     };
 
-    logger.log("Response:\n", JSON.stringify(message, null, 2));
+    logger.log(`Response: ${JSON.stringify(message, null, 2)}`);
     return response;
 });
 
