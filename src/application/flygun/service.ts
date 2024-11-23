@@ -3,13 +3,15 @@ import {HttpService} from "@nestjs/axios";
 import {OnEvent} from "@nestjs/event-emitter";
 
 import {lastValueFrom} from "rxjs";
-import {AxiosResponse} from "axios"
+import {AxiosResponse} from "axios";
 
 import * as net from "node:net";
 
 import {StreamElementsSocketClientManager} from "@chimera/streamelements/client/socket/manager";
 
-import configuration from "@chimera/configuration";;
+import configuration from "@chimera/configuration";
+
+;
 
 const streamElementsAccountId: string = configuration.app.flygun.streamElementsAccountId;
 
@@ -30,19 +32,30 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
 
     private readonly server: net.Server = net.createServer((socket: net.Socket): void => {
         this.logger.log(`Client connected.`);
-        this.enabled = true;
 
         socket.on("close", (): void => {
             this.logger.log(`Client disconnected.`);
-            this.enabled = false;
         });
 
         socket.on("data", (data: Buffer): void => {
             this.logger.verbose(`Request: ${data.toString()}`);
-            const [id, amount] = this.queue.shift() ?? ["", 0];
-            socket.write(`${amount}\n`, (): void => {
-                this.logger.verbose(`Response: ${amount}`);
-            });
+            switch (data.toString()) {
+                case "ENABLE": {
+                    this.enabled = true;
+                    break;
+                }
+                case "DISABLE": {
+                    this.enabled = false;
+                    break;
+                }
+                case "GET": {
+                    const [id, amount] = this.queue.shift() ?? ["", 0];
+                    socket.write(`${amount}\n`, (): void => {
+                        this.logger.verbose(`Response: ${amount}`);
+                    });
+                    break;
+                }
+            }
         });
 
         socket.on("error", (error: Error): void => {
@@ -93,7 +106,7 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
                         const currencyRate: number = currencyRates.kurzy[currency].dev_stred;
                         amount = amount * currencyRate;
                     } else {
-                        this.logger.error(`Currency rate for ${currency} was not found.`)
+                        this.logger.error(`Currency rate for ${currency} was not found.`);
                     }
                 }
                 amount = Math.ceil(-amount * TIP_MULTIPLIER);
