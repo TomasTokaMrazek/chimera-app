@@ -14,10 +14,4 @@ export class StreamElementsController {
         await this.streamElementsService.login(jwt);
     }
 
-    @Post("connect")
-    public async connect(@Body() body: { accountId: string }): Promise<void> {
-        const accountId: string = body.accountId;
-        await this.streamElementsService.connect(accountId);
-    }
-
 }

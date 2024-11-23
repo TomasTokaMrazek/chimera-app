@@ -45,7 +45,7 @@ export class StreamElementsRepository {
     }
 
 
-    public async getOrCreateStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
+    public async getOrInsertStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
         return this.prisma.streamElements
             .upsert({
                 where: {
