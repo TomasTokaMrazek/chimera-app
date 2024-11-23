@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Post, Query, Redirect} from "@nestjs/common";
+import {Controller, Get, Query, Redirect} from "@nestjs/common";
 
 import {StreamLabsService} from "./service";
 
@@ -21,9 +21,4 @@ export class StreamLabsController {
         await this.streamLabsService.oauthCallback(code);
     }
 
-    @Post("connect")
-    public async connect(@Body() body: { accountId: string }): Promise<void> {
-        const accountId: string = body.accountId;
-        await this.streamLabsService.connect(accountId);
-    }
 }

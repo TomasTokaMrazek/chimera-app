@@ -31,7 +31,7 @@ export class StreamLabsRepository {
             });
     }
 
-    public async getOrCreateStreamLabsId(accountId: string, twitchId: number): Promise<IdView> {
+    public async getOrInsertStreamLabsId(accountId: string, twitchId: number): Promise<IdView> {
         return this.prisma.streamLabs
             .upsert({
                 where: {
