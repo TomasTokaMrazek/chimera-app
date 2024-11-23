@@ -22,6 +22,15 @@ export class StreamLabsRepository {
             });
     }
 
+    public async getByAccountId(accountId: string): Promise<StreamLabs> {
+        return this.prisma.streamLabs
+            .findUniqueOrThrow({
+                where: {
+                    account_id: accountId
+                }
+            });
+    }
+
     public async getOrCreateStreamLabsId(accountId: string, twitchId: number): Promise<IdView> {
         return this.prisma.streamLabs
             .upsert({

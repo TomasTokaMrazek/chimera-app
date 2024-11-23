@@ -6,6 +6,14 @@
             "redirectUri": "https://chimera-app.tomastokamrazek.cz/application/chatbot/oauth/callback",
             "userAccountId": "1119298268",
             "adminAccountId": "69887790"
+        },
+        "agraelus": {
+            "twitchAccountId": "36620767"
+        },
+        "flygun": {
+            "twitchAccountId": "27122439",
+            // "streamElementsAccountId": "600cea4f0b1e57111c4d5eab"
+            "streamElementsAccountId": "5dfe32d7a875176ceec47888"
         }
     },
     "twitch": {

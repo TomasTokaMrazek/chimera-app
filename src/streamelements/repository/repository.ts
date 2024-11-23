@@ -5,6 +5,7 @@ import {PrismaService} from "@chimera/prisma";
 import {StreamElements} from "@prisma/client";
 
 import {IdView} from "./views";
+import {UserView} from "@chimera/twitch/repository/views";
 
 @Injectable()
 export class StreamElementsRepository {
@@ -21,6 +22,28 @@ export class StreamElementsRepository {
                 }
             });
     }
+
+    public async getByAccountId(accountId: string): Promise<StreamElements> {
+        return this.prisma.streamElements
+            .findUniqueOrThrow({
+                where: {
+                    account_id: accountId
+                }
+            });
+    }
+
+    public async getUserByAccountId(accountId: string): Promise<UserView> {
+        return this.prisma.streamElements
+            .findUniqueOrThrow({
+                where: {
+                    account_id: accountId
+                },
+                select: {
+                    user: true
+                }
+            });
+    }
+
 
     public async getOrCreateStreamElementsId(accountId: string, twitchId: number): Promise<IdView> {
         return this.prisma.streamElements

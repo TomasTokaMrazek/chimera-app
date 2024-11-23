@@ -20,7 +20,6 @@ class StreamElementsHttpClient {
         return new StreamElementsHttpClient(httpService, jwt);
     }
 
-
     public getCurrentUser(): Promise<AxiosResponse<Dto.CurrentUserRequest>> {
         const config: AxiosRequestConfig = {
             headers: {

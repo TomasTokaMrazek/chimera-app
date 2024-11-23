@@ -1,6 +1,7 @@
 import {Logger, Module, OnModuleInit} from "@nestjs/common";
 import {HttpModule, HttpService} from "@nestjs/axios";
 import {ScheduleModule} from "@nestjs/schedule";
+import {EventEmitterModule} from "@nestjs/event-emitter";
 import {APP_PIPE} from "@nestjs/core";
 
 import {ZodValidationPipe} from "nestjs-zod";
@@ -12,10 +13,26 @@ import {StreamLabsModule} from "@chimera/streamlabs/module";
 import {ApplicationChatbotModule} from "@chimera/application/chatbot/module";
 import {ApplicationEventModule} from "@chimera/application/event/module";
 import {ApplicationAgraelusModule} from "@chimera/application/agraelus/module";
+import {ApplicationFlygunModule} from "@chimera/application/flygun/module";
+
 import {Axios, AxiosResponse, InternalAxiosRequestConfig} from "axios";
 
 @Module({
-    imports: [HttpModule, ScheduleModule.forRoot(), PrismaModule, TwitchModule, StreamElementsModule, StreamLabsModule, ApplicationChatbotModule, ApplicationEventModule, ApplicationAgraelusModule],
+    imports: [
+        HttpModule,
+        ScheduleModule.forRoot(),
+        EventEmitterModule.forRoot({
+            wildcard: true
+        }),
+        PrismaModule,
+        TwitchModule,
+        StreamElementsModule,
+        StreamLabsModule,
+        ApplicationChatbotModule,
+        ApplicationEventModule,
+        ApplicationAgraelusModule,
+        ApplicationFlygunModule
+    ],
     providers: [
         {
             provide: APP_PIPE,

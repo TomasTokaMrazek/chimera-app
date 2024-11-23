@@ -1,11 +1,7 @@
 import {Logger} from "@nestjs/common";
+import {EventEmitter2} from "@nestjs/event-emitter";
 
-import io, {Socket} from "socket.io-client";
-
-import {ApplicationEventManager, Donation} from "@chimera/application/event/manager";
-import {EventSyncService} from "@chimera/application/event/dto";
-
-import {User} from "@prisma/client";
+import {io, Socket} from "socket.io-client";
 
 import * as Dto from "./dto";
 
@@ -15,44 +11,60 @@ const websocketUrl: string = configuration.streamLabs.websocketUrl;
 
 export class StreamLabsSocketClient {
 
-    private static readonly logger: Logger = new Logger(StreamLabsSocketClient.name);
+    private readonly logger: Logger = new Logger(StreamLabsSocketClient.name);
 
-    static createInstance(eventManager: ApplicationEventManager, user: User, socketToken: string): StreamLabsSocketClient {
-        const socket: Socket<Dto.ServerToClientEvents, any> = io(`${websocketUrl}?token=${socketToken}`, {
-            transports: ["websocket"]
-        });
-        socket.on("connect", (): void => {
-            this.logger.log("[StreamLabs] Connected to the websocket server.");
-        });
+    constructor(
+        private readonly socket: Socket<Dto.ServerToClientEvents, any>,
+        private readonly emitter: EventEmitter2,
+        private readonly accountId: string
+    ) {}
 
-        socket.on("disconnect", (): void => {
-            this.logger.log("[StreamLabs] Disconnected from the websocket server.");
-        });
-
-        socket.on("event", (event: Dto.TipEvent): void => {
-            switch (event.type) {
-                case "donation": {
-                    Promise.all(event.message.map(async (message: Dto.TipEventMessage): Promise<void[]> => {
-                        const donation: Donation = {
-                            username: message.name,
-                            message: message.message,
-                            currency: message.currency,
-                            amount: message.amount
-                        };
-
-                        return await eventManager.syncDonations(EventSyncService.enum.STREAMLABS, user, donation);
-                    })).catch(error => {
-                        this.logger.error(`[StreamLabs] Error processing event.`, error);
-                    });
-                    break;
-                }
-            }
+    static createInstance(emitter: EventEmitter2, socketToken: string, accountId: string): StreamLabsSocketClient {
+        const socket = io(`${websocketUrl}?token=${socketToken}`, {
+            transports: ["websocket"],
+            autoConnect: false
         });
 
-        socket.onAny((eventName, ...args: any[]): void => {
-            this.logger.log(`[StreamLabs] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
-        });
-        return new StreamLabsSocketClient();
+        const client: StreamLabsSocketClient = new StreamLabsSocketClient(socket, emitter, accountId);
+
+        socket.on("connect", (): void => client.onConnect());
+        socket.on("disconnect", (reason: string): void => client.onDisconnect(reason));
+
+        socket.on("event", (message: object): void => client.onEvent(message));
+        socket.onAny((eventName: any, ...args: any[]): void => client.onAny(eventName, args));
+
+        return client;
+    }
+
+    connect(): void {
+        this.socket.connect();
+    }
+
+    disconnect(): void {
+        this.socket.disconnect();
+    }
+
+    isConnected(): boolean {
+        return this.socket.connected;
+    }
+
+    private onConnect(): void {
+        this.logger.log("[StreamLabs] Connected to the websocket server.");
+    }
+
+    private onDisconnect(reason: string): void {
+        this.logger.log("[StreamLabs] Disconnected from the websocket server.");
+        this.emitter.emit("streamlabs.disconnected", reason);
+    }
+
+    private onEvent(message: any): void {
+        this.logger.log(`[StreamLabs] Event: ${JSON.stringify(message)}`);
+        this.emitter.emit("streamlabs.event", message, this.accountId);
+    }
+
+    private onAny(eventName: any, ...args: any[]): void {
+        this.logger.verbose(`[StreamLabs] EventName: ${eventName}, Args: ${JSON.stringify(args)}`);
+        this.emitter.emit("streamlabs", eventName, args);
     }
 
 }

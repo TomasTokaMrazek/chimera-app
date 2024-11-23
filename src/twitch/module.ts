@@ -11,7 +11,7 @@ import {TwitchRepository} from "@chimera/twitch/repository/repository"
 @Module({
     imports: [HttpModule],
     controllers: [TwitchController],
-    providers: [TwitchRepository, TwitchService, TwitchHttpClientManager, TwitchSocketClientManager],
-    exports: [TwitchRepository, TwitchService, TwitchHttpClientManager, TwitchSocketClientManager]
+    providers: [TwitchService, TwitchHttpClientManager, TwitchSocketClientManager, TwitchRepository],
+    exports: [TwitchService, TwitchHttpClientManager, TwitchSocketClientManager, TwitchRepository]
 })
 export class TwitchModule {}

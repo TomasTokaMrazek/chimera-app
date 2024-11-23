@@ -4,8 +4,7 @@ import {HttpService} from "@nestjs/axios";
 import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {UserView} from "@chimera/twitch/repository/views";
-import {Twitch, User, StreamLabs} from "@prisma/client";
+import {Twitch, StreamLabs} from "@prisma/client";
 
 import {AccountIds, OauthTokens, SocketToken} from "./types";
 import {StreamLabsRepository} from "./repository/repository";
@@ -14,9 +13,7 @@ import {IdView} from "./repository/views";
 import StreamLabsHttpClient from "./client/http/client";
 import * as HttpDto from "./client/http/dto";
 
-import {StreamLabsSocketClient} from "./client/socket/client";
-
-import {ApplicationEventManager} from "@chimera/application/event/manager";
+import {StreamLabsSocketClientManager} from "@chimera/streamlabs/client/socket/manager";
 
 import configuration from "@chimera/configuration";
 
@@ -30,12 +27,11 @@ export class StreamLabsService {
     constructor(
         private readonly httpService: HttpService,
         private readonly streamLabsRepository: StreamLabsRepository,
-        private readonly twitchRepository: TwitchRepository,
-        private readonly applicationEventManager: ApplicationEventManager
+        private readonly streamLabsSocketClientManager: StreamLabsSocketClientManager,
+        private readonly twitchRepository: TwitchRepository
     ) {}
 
-    private readonly httpClients: Map<number, StreamLabsHttpClient> = new Map();
-    private readonly socketClients: Map<number, StreamLabsSocketClient> = new Map();
+    private readonly httpClients: Map<string, StreamLabsHttpClient> = new Map();
 
     public async login(): Promise<URL> {
         const url: URL = new URL(streamLabsOauthUrl + "/authorize");
@@ -54,33 +50,26 @@ export class StreamLabsService {
         await this.connect(accountIds.twitch.toString());
     }
 
-    public async connect(twitchAccountId: string): Promise<void> {
-        const userView: UserView = await this.twitchRepository.getUserByAccountId(twitchAccountId);
-        const user: User = userView.user ?? ((): User => {
-            throw new Error(`Twitch Account '${twitchAccountId}' is not associated with User.`);
-        })();
-        const streamLabsId: number = user.streamlabs_id ?? ((): number => {
-            throw new Error(`Twitch Account '${twitchAccountId}' is not associated with StreamLabs account.`);
-        })();
-
-        const streamLabs: StreamLabs = await this.streamLabsRepository.getById(streamLabsId);
+    public async connect(accountId: string): Promise<void> {
+        const streamLabs: StreamLabs = await this.streamLabsRepository.getByAccountId(accountId);
         const accessToken: string = streamLabs.access_token ?? ((): string => {
-            throw new Error(`StreamLabs Account '${streamLabs.account_id}' does not have Authorization token`);
-        })();
-        const socketToken: string = streamLabs.socket_token ?? ((): string => {
             throw new Error(`StreamLabs Account '${streamLabs.account_id}' does not have Authorization token`);
         })();
 
         const httpclient: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(this.httpService, accessToken);
-        this.httpClients.set(user.id, httpclient);
+        this.httpClients.set(accountId, httpclient);
 
-        const socketClient: StreamLabsSocketClient = StreamLabsSocketClient.createInstance(this.applicationEventManager, user, socketToken);
-        this.socketClients.set(user.id, socketClient);
+        await this.streamLabsSocketClientManager.createSocketClient(accountId);
     }
 
-    public getHttpClient(userId: number): StreamLabsHttpClient {
-        return this.httpClients.get(userId) ?? ((): StreamLabsHttpClient => {
-            throw new Error("StreamLabs HTTP client is undefined.");
+    public async getHttpClient(id: number): Promise<StreamLabsHttpClient> {
+        const streamLabs: StreamLabs = await this.streamLabsRepository.getById(id);
+        const accountId: string = streamLabs.account_id ?? ((): string => {
+            throw new Error(`treamLabs Account ID for ID '${id}' does not exist.`);
+        })();
+
+        return this.httpClients.get(accountId) ?? ((): StreamLabsHttpClient => {
+            throw new Error("treamLabs HTTP client is undefined.");
         })();
     }
 

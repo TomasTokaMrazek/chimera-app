@@ -4,8 +4,7 @@ import {HttpService} from "@nestjs/axios";
 import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {UserView} from "@chimera/twitch/repository/views";
-import {Twitch, User, StreamElements} from "@prisma/client";
+import {Twitch, StreamElements} from "@prisma/client";
 
 import {AccountIds} from "./types";
 import {StreamElementsRepository} from "./repository/repository";
@@ -14,7 +13,7 @@ import {IdView} from "./repository/views";
 import StreamElementsHttpClient from "./client/http/client";
 import * as HttpDto from "./client/http/dto";
 
-import StreamElementsSocketClient from "./client/socket/client";
+import {StreamElementsSocketClientManager} from "@chimera/streamelements/client/socket/manager";
 
 @Injectable()
 export class StreamElementsService {
@@ -22,11 +21,11 @@ export class StreamElementsService {
     constructor(
         private readonly httpService: HttpService,
         private readonly streamElementsRepository: StreamElementsRepository,
+        private readonly streamElementsSocketClientManager: StreamElementsSocketClientManager,
         private readonly twitchRepository: TwitchRepository
     ) {}
 
-    private readonly httpClients: Map<number, StreamElementsHttpClient> = new Map();
-    private readonly socketClients: Map<number, StreamElementsSocketClient> = new Map();
+    private readonly httpClients: Map<string, StreamElementsHttpClient> = new Map();
 
     public async login(jwt: string): Promise<void> {
         const accountIds: AccountIds = await this.getAccountIds(jwt);
@@ -34,29 +33,25 @@ export class StreamElementsService {
         await this.connect(accountIds.twitch);
     }
 
-    public async connect(twitchAccountId: string): Promise<void> {
-        const userView: UserView = await this.twitchRepository.getUserByAccountId(twitchAccountId);
-        const user: User = userView.user ?? ((): User => {
-            throw new Error(`Twitch Account '${twitchAccountId}' is not associated with User.`);
-        })();
-        const streamElementsId: number = user.streamelements_id ?? ((): number => {
-            throw new Error(`Twitch Account '${twitchAccountId}' is not associated with StreamElements account.`);
-        })();
-
-        const streamElements: StreamElements = await this.streamElementsRepository.getById(streamElementsId);
+    public async connect(accountId: string): Promise<void> {
+        const streamElements: StreamElements = await this.streamElementsRepository.getByAccountId(accountId);
         const jwt: string = streamElements.jwt ?? ((): string => {
-            throw new Error(`StreamElements Account '${streamElements.account_id}' does not have Authorization token.`);
+            throw new Error(`StreamElements Account '${accountId}' does not have Authorization token.`);
         })();
 
         const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(this.httpService, jwt);
-        this.httpClients.set(user.id, httpclient);
+        this.httpClients.set(accountId, httpclient);
 
-        const socketClient: StreamElementsSocketClient = StreamElementsSocketClient.createInstance(user, jwt);
-        this.socketClients.set(user.id, socketClient);
+        await this.streamElementsSocketClientManager.createSocketClient(accountId);
     }
 
-    public async getHttpClient(userId: number): Promise<StreamElementsHttpClient> {
-        return this.httpClients.get(userId) ?? ((): StreamElementsHttpClient => {
+    public async getHttpClient(id: number): Promise<StreamElementsHttpClient> {
+        const streamElements: StreamElements = await this.streamElementsRepository.getById(id);
+        const accountId: string = streamElements.account_id ?? ((): string => {
+            throw new Error(`StreamElements Account ID for ID '${id}' does not exist.`);
+        })();
+
+        return this.httpClients.get(accountId) ?? ((): StreamElementsHttpClient => {
             throw new Error("StreamElements HTTP client is undefined.");
         })();
     }

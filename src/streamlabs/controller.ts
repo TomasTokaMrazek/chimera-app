@@ -22,8 +22,8 @@ export class StreamLabsController {
     }
 
     @Post("connect")
-    public async connect(@Body() body: { twitchAccountId: string }): Promise<void> {
-        const twitchAccountId: string = body.twitchAccountId;
-        await this.streamLabsService.connect(twitchAccountId);
+    public async connect(@Body() body: { accountId: string }): Promise<void> {
+        const accountId: string = body.accountId;
+        await this.streamLabsService.connect(accountId);
     }
 }

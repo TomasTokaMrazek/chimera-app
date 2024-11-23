@@ -4,6 +4,7 @@ import {HttpModule} from "@nestjs/axios";
 
 import {StreamElementsController} from "@chimera/streamelements/controller";
 import {StreamElementsService} from "@chimera/streamelements/service";
+import {StreamElementsSocketClientManager} from "@chimera/streamelements/client/socket/manager";
 import {StreamElementsRepository} from "@chimera/streamelements/repository/repository";
 
 import {TwitchModule} from "@chimera/twitch/module";
@@ -11,7 +12,7 @@ import {TwitchModule} from "@chimera/twitch/module";
 @Module({
     imports: [HttpModule, TwitchModule],
     controllers: [StreamElementsController],
-    providers: [StreamElementsService, StreamElementsRepository],
-    exports: [StreamElementsService]
+    providers: [StreamElementsService, StreamElementsSocketClientManager, StreamElementsRepository],
+    exports: [StreamElementsService, StreamElementsSocketClientManager, StreamElementsRepository]
 })
 export class StreamElementsModule {}

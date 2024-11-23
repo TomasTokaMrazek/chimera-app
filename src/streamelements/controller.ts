@@ -15,9 +15,9 @@ export class StreamElementsController {
     }
 
     @Post("connect")
-    public async connect(@Body() body: { twitchAccountId: string }): Promise<void> {
-        const twitchAccountId: string = body.twitchAccountId;
-        await this.streamElementsService.connect(twitchAccountId);
+    public async connect(@Body() body: { accountId: string }): Promise<void> {
+        const accountId: string = body.accountId;
+        await this.streamElementsService.connect(accountId);
     }
 
 }

@@ -17,10 +17,21 @@ interface Chatbot {
     adminAccountId: string;
 }
 
+interface Agraelus {
+    twitchAccountId: string;
+}
+
+interface Flygun {
+    twitchAccountId: string;
+    streamElementsAccountId: string;
+}
+
 interface App {
     url: string;
     port: number;
     chatbot: Chatbot;
+    agraelus: Agraelus;
+    flygun: Flygun;
 }
 
 interface Twitch {
@@ -70,10 +81,21 @@ const chatbot: Chatbot = {
     adminAccountId: config.get("app.chatbot.adminAccountId")
 };
 
+const agraelus: Agraelus = {
+    twitchAccountId: config.get("app.agraelus.twitchAccountId")
+};
+
+const flygun: Flygun = {
+    twitchAccountId: config.get("app.flygun.twitchAccountId"),
+    streamElementsAccountId: config.get("app.flygun.streamElementsAccountId")
+};
+
 const app: App = {
     url: config.get("app.url"),
     port: config.get("app.port"),
-    chatbot: chatbot
+    chatbot: chatbot,
+    agraelus: agraelus,
+    flygun: flygun
 };
 
 const twitch: Twitch = {
