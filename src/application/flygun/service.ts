@@ -68,13 +68,13 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
         private readonly streamElementsSocketClientManager: StreamElementsSocketClientManager
     ) {}
 
-    async onModuleInit(): Promise<any> {
+    async onModuleInit(): Promise<void> {
         this.server.listen(PORT, HOST);
         await this.streamElementsSocketClientManager.createClient(streamElementsUserAccountId)
             .catch((error: Error): void => this.logger.error(error.message, error.stack));
     }
 
-    async onModuleDestroy(): Promise<any> {
+    async onModuleDestroy(): Promise<void> {
         this.server.close();
         await this.streamElementsSocketClientManager.destroyClient(streamElementsUserAccountId)
             .catch((error: Error): void => this.logger.error(error.message, error.stack));
@@ -122,7 +122,7 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
         }
     }
 
-    async addToQueue(id: string, amount: number) {
+    async addToQueue(id: string, amount: number): Promise<void> {
         this.queue.push([id, amount]);
     }
 
