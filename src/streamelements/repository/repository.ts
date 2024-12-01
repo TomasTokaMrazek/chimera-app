@@ -1,10 +1,9 @@
 import {Injectable} from "@nestjs/common";
 
 import {PrismaService} from "@chimera/prisma";
-import {StreamElements} from "@prisma/client";
-import {UserView} from "@chimera/twitch/repository/views";
+import {StreamElements} from "@chimera/prisma/client";
 
-import {IdView} from "./views";
+import {IdView, UserView} from "./views";
 
 @Injectable()
 export class StreamElementsRepository {

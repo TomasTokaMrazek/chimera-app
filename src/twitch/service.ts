@@ -6,8 +6,9 @@ import {EventSubWsListener} from "@twurple/eventsub-ws";
 import {LogLevel} from "@d-fischer/logger";
 import {LoggerOverride} from "@d-fischer/logger/lib/CustomLoggerWrapper";
 
+import {Twitch} from "@chimera/prisma/client";
+
 import {TwitchRepository} from "./repository/repository";
-import {Twitch} from "@prisma/client";
 
 import configuration from "@chimera/configuration";
 

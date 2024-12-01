@@ -1,4 +1,4 @@
-import {User} from "@prisma/client";
+import {User} from "@chimera/prisma/client";
 
 export interface IdView {
     id: number;

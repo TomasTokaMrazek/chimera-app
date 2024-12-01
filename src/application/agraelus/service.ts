@@ -6,6 +6,7 @@ import {differenceInSeconds, format, isValid} from "date-fns";
 import {cs} from "date-fns/locale";
 
 import {ApiClient, HelixUser} from "@twurple/api";
+import {BaseApiClient} from "@twurple/api/lib/client/BaseApiClient";
 import {EventSubWsListener} from "@twurple/eventsub-ws";
 import {EventSubSubscription} from "@twurple/eventsub-base/lib/subscriptions/EventSubSubscription";
 import {EventSubChannelChatMessageEvent} from "@twurple/eventsub-base/lib/events/EventSubChannelChatMessageEvent";
@@ -16,7 +17,6 @@ import WheelOfNamesClient from "@chimera/wheelofnames/client/http/client";
 import * as Wheel from "@chimera/wheelofnames/client/http/dto";
 
 import configuration from "@chimera/configuration";
-import {BaseApiClient} from "@twurple/api/lib/client/BaseApiClient";
 
 const chatbotAccountId: string = configuration.app.chatbot.twitch.userAccountId;
 const agraelusUserAccountId: string = configuration.app.agraelus.twitch.userAccountId;

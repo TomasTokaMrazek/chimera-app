@@ -2,17 +2,17 @@ import {Injectable, Logger} from "@nestjs/common";
 import {OnEvent} from "@nestjs/event-emitter";
 import {AxiosResponse} from "axios";
 
-import {EventSynchronization, User} from "@prisma/client";
+import {EventSynchronization, User} from "@chimera/prisma/client";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {UserView} from "@chimera/twitch/repository/views";
-
-import * as Dto from "@chimera/streamlabs/client/socket/dto";
 
 import {StreamElementsService} from "@chimera/streamelements/service";
 import {StreamElementsRepository} from "@chimera/streamelements/repository/repository";
 import {StreamElementsHttpClient} from "@chimera/streamelements/client/http/client";
 import {CurrentUserChannel, TipRequest} from "@chimera/streamelements/client/http/dto";
+
+import * as Dto from "@chimera/streamlabs/client/socket/dto";
 
 import {ApplicationEventRepository} from "./repository";
 import {EventSyncRequestType, EventSyncService, EventSyncServiceType} from "./dto";

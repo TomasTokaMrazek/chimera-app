@@ -3,16 +3,14 @@ import {HttpService} from "@nestjs/axios";
 
 import {AxiosResponse} from "axios";
 
+import {StreamLabs, Twitch} from "@chimera/prisma/client";
+
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {StreamLabs, Twitch} from "@prisma/client";
 
 import {StreamLabsRepository} from "./repository/repository";
 import {IdView} from "./repository/views";
-
 import {StreamLabsHttpClient} from "./client/http/client";
 import * as HttpDto from "./client/http/dto";
-
-import {StreamLabsSocketClientManager} from "./client/socket/manager";
 
 import configuration from "@chimera/configuration";
 
@@ -26,7 +24,6 @@ export class StreamLabsService {
     constructor(
         private readonly httpService: HttpService,
         private readonly streamLabsRepository: StreamLabsRepository,
-        private readonly streamLabsSocketClientManager: StreamLabsSocketClientManager,
         private readonly twitchRepository: TwitchRepository
     ) {}
 

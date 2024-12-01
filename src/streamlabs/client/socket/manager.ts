@@ -1,9 +1,9 @@
 import {Injectable, Logger} from "@nestjs/common";
 import {EventEmitter2} from "@nestjs/event-emitter";
 
-import {StreamLabsRepository} from "@chimera/streamlabs/repository/repository";
-import {StreamLabs} from "@prisma/client";
+import {StreamLabs} from "@chimera/prisma/client";
 
+import {StreamLabsRepository} from "@chimera/streamlabs/repository/repository";
 import {StreamLabsSocketClient} from "@chimera/streamlabs/client/socket/client";
 
 @Injectable()

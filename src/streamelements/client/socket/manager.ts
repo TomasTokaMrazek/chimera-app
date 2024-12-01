@@ -1,7 +1,7 @@
 import {Injectable, Logger} from "@nestjs/common";
 import {EventEmitter2} from "@nestjs/event-emitter";
 
-import {StreamElements} from "@prisma/client";
+import {StreamElements} from "@chimera/prisma/client";
 
 import {StreamElementsRepository} from "@chimera/streamelements/repository/repository";
 import {StreamElementsSocketClient} from "@chimera/streamelements/client/socket/client";

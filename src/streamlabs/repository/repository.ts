@@ -1,8 +1,7 @@
 import {Injectable} from "@nestjs/common";
 
 import {PrismaService} from "@chimera/prisma";
-
-import {StreamLabs} from "@prisma/client";
+import {StreamLabs} from "@chimera/prisma/client";
 
 import {IdView} from "./views";
 

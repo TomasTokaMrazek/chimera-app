@@ -3,12 +3,12 @@ import {HttpService} from "@nestjs/axios";
 
 import {AxiosResponse} from "axios";
 
+import {StreamElements, Twitch} from "@chimera/prisma/client";
+
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {StreamElements, Twitch} from "@prisma/client";
 
 import {StreamElementsRepository} from "./repository/repository";
 import {IdView} from "./repository/views";
-
 import {StreamElementsHttpClient} from "./client/http/client";
 import * as HttpDto from "./client/http/dto";
 

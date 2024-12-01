@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 
 import {PrismaService} from "@chimera/prisma";
-import {EventSynchronization} from "@prisma/client";
+import {EventSynchronization} from "@chimera/prisma/client";
 
 import {EventSyncServiceType} from "./dto";
 

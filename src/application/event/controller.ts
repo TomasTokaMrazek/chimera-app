@@ -1,6 +1,6 @@
 import {Body, Controller, Get, Post, Query} from "@nestjs/common";
 
-import {EventSynchronization} from "@prisma/client";
+import {EventSynchronization} from "@chimera/prisma/client";
 
 import {ApplicationEventService} from "./service";
 import {EventSyncRequestDto} from "./dto";

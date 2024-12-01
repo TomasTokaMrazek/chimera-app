@@ -32,6 +32,7 @@
     "paths": {
       "@chimera/configuration": ["configuration"],
       "@chimera/prisma": ["prisma.service"],
+      "@chimera/prisma/client": ["../node_modules/.prisma/client"],
       "@chimera/application/*": ["application/*"],
       "@chimera/streamelements/*": ["streamelements/*"],
       "@chimera/streamlabs/*": ["streamlabs/*"],
