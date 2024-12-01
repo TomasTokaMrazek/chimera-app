@@ -19,7 +19,7 @@ export class StreamLabsSocketClient {
         private readonly accountId: string
     ) {}
 
-    static createInstance(emitter: EventEmitter2, socketToken: string, accountId: string): StreamLabsSocketClient {
+    static createInstance(emitter: EventEmitter2, accountId: string, socketToken: string): StreamLabsSocketClient {
         const socket = io(`${websocketUrl}?token=${socketToken}`, {
             transports: ["websocket"],
             autoConnect: false
@@ -29,7 +29,6 @@ export class StreamLabsSocketClient {
 
         socket.on("connect", (): void => client.onConnect());
         socket.on("disconnect", (reason: string): void => client.onDisconnect(reason));
-
         socket.on("event", (message: object): void => client.onEvent(message));
         socket.onAny((eventName: any, ...args: any[]): void => client.onAny(eventName, args));
 

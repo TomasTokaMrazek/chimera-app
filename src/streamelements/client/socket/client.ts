@@ -13,22 +13,22 @@ export class StreamElementsSocketClient {
 
     constructor(
         private readonly socket: Socket,
-        private readonly emitter: EventEmitter2
+        private readonly emitter: EventEmitter2,
+        private readonly accountId: string
     ) {}
 
-    static createInstance(emitter: EventEmitter2, jwt: string): StreamElementsSocketClient {
+    static createInstance(emitter: EventEmitter2, accountId: string, jwt: string): StreamElementsSocketClient {
         const socket = io(`${websocketUrl}`, {
             transports: ["websocket"],
             autoConnect: false
         });
 
-        const client: StreamElementsSocketClient = new StreamElementsSocketClient(socket, emitter);
+        const client: StreamElementsSocketClient = new StreamElementsSocketClient(socket, emitter, accountId);
 
         socket.on("connect", (): void => client.onConnect(jwt));
         socket.on("authenticated", (): void => client.onAuthenticated());
         socket.on("unauthorized", (): void => client.onUnauthorized());
         socket.on("disconnect", (reason: string): void => client.onDisconnect(reason));
-
         socket.on("event", (message: object): void => client.onEvent(message));
         socket.onAny((eventName: any, ...args: any[]): void => client.onAny(eventName, args));
 
@@ -68,7 +68,7 @@ export class StreamElementsSocketClient {
 
     private onEvent(message: any): void {
         this.logger.log(`[StreamElements] Event: ${JSON.stringify(message)}`);
-        this.emitter.emit("streamelements.event", message);
+        this.emitter.emit("streamelements.event", message, this.accountId);
     }
 
     private onAny(eventName: any, ...args: any[]): void {

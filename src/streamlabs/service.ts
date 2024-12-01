@@ -4,16 +4,15 @@ import {HttpService} from "@nestjs/axios";
 import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {Twitch, StreamLabs} from "@prisma/client";
+import {StreamLabs, Twitch} from "@prisma/client";
 
-import {AccountIds, OauthTokens, SocketToken} from "./types";
 import {StreamLabsRepository} from "./repository/repository";
 import {IdView} from "./repository/views";
 
-import StreamLabsHttpClient from "./client/http/client";
+import {StreamLabsHttpClient} from "./client/http/client";
 import * as HttpDto from "./client/http/dto";
 
-import {StreamLabsSocketClientManager} from "@chimera/streamlabs/client/socket/manager";
+import {StreamLabsSocketClientManager} from "./client/socket/manager";
 
 import configuration from "@chimera/configuration";
 
@@ -70,6 +69,17 @@ export class StreamLabsService {
         const streamLabsId: IdView = await this.streamLabsRepository.getOrInsertStreamLabsId(streamLabsAccountId, twitch.id);
 
         await this.streamLabsRepository.updateTokens(streamLabsId.id, accessToken, refreshToken, socketToken);
+    }
+
+    public async getHttpClient(id: number): Promise<StreamLabsHttpClient> {
+        const streamLabs: StreamLabs = await this.streamLabsRepository.getById(id);
+        const accountId: string = streamLabs.account_id ?? ((): string => {
+            throw new Error(`StreamLabs Account ID for ID '${id}' does not exist.`);
+        })();
+
+        return this.httpClients.get(accountId) ?? ((): StreamLabsHttpClient => {
+            throw new Error("StreamLabs HTTP client is undefined.");
+        })();
     }
 
 }

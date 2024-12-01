@@ -3,24 +3,32 @@
         "url": "https://chimera-app.tomastokamrazek.cz",
         "port": 3000,
         "chatbot": {
-            "redirectUri": "https://chimera-app.tomastokamrazek.cz/application/chatbot/oauth/callback",
-            "userAccountId": "1119298268",
-            "adminAccountId": "69887790"
+            "twitch": {
+                "userAccountId": "1119298268",
+                "adminAccountIds": ["69887790"]
+            }
         },
         "agraelus": {
-            "twitchAccountId": "36620767"
+            "twitch": {
+                "userAccountId": "36620767",
+                "adminAccountIds": ["69887790", "807488577"]
+            }
         },
         "flygun": {
-            "twitchAccountId": "27122439",
-            // "streamElementsAccountId": "600cea4f0b1e577f084d5eac"
-            "streamElementsAccountId": "5dfe32d7a8751704e1c47889"
+            "twitch": {
+                "userAccountId": "27122439",
+                "adminAccountIds": ["69887790"]
+            },
+            "streamElements": {
+                "userAccountId": "5dfe32d7a8751704e1c47889"
+            }
         }
     },
     "twitch": {
         "oauthUrl": "https://id.twitch.tv/oauth2",
         "apiUrl": "https://api.twitch.tv/helix",
         "websocketUrl": "wss://eventsub.wss.twitch.tv/ws",
-        "redirectUri": "https://chimera-app.tomastokamrazek.cz/twitch/oauth/callback"
+        "redirectUri": "https://chimera-app.tomastokamrazek.cz/twitch/oauth/callback",
     },
     "streamElements": {
         "oauthUrl": "https://api.streamelements.com/oauth2",

@@ -1,94 +1,35 @@
-import {Injectable} from '@nestjs/common';
-import {HttpService} from "@nestjs/axios";
+import {Injectable, Logger, OnModuleInit} from "@nestjs/common";
 
-import {AxiosResponse} from "axios";
-import {Twitch} from "@prisma/client";
+import {EventSubWsListener} from "@twurple/eventsub-ws";
+import {EventSubSubscription} from "@twurple/eventsub-base/lib/subscriptions/EventSubSubscription";
+import {EventSubChannelChatMessageEvent} from "@twurple/eventsub-base/lib/events/EventSubChannelChatMessageEvent";
 
-import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {IdView} from "@chimera/twitch/repository/views";
-
-import TwitchHttpClient from "@chimera/twitch/client/http/client";
-import * as TokenDto from "@chimera/twitch/client/http/dto/token";
-
-import {TwitchSocketClientManager} from "@chimera/twitch/client/socket/manager";
-
-import {AccountIds, OauthTokens} from "./types";
+import {TwitchService} from "@chimera/twitch/service";
 
 import configuration from "@chimera/configuration";
 
-const twitchWebsocketUrl: string = configuration.twitch.websocketUrl;
-const twitchOauthUrl: string = configuration.twitch.oauthUrl;
-const clientID: string = configuration.twitch.clientId;
-const redirectUri: string = configuration.app.chatbot.redirectUri;
-const userAccountId: string = configuration.app.chatbot.userAccountId;
+const userAccountId: string = configuration.app.chatbot.twitch.userAccountId;
 
 @Injectable()
-export class ApplicationChatbotService {
+export class ApplicationChatbotService implements OnModuleInit {
+
+    private readonly logger: Logger = new Logger(ApplicationChatbotService.name);
 
     constructor(
-        private readonly httpService: HttpService,
-        private readonly twitchRepository: TwitchRepository,
-        private readonly twitchSocketClientManager: TwitchSocketClientManager
+        private readonly twitchService: TwitchService
     ) {}
 
-    public async login(): Promise<URL> {
-        const url: URL = new URL(twitchOauthUrl + "/authorize");
-        url.searchParams.append("response_type", "code");
-        url.searchParams.append("client_id", clientID);
-        url.searchParams.append("redirect_uri", redirectUri);
-        url.searchParams.append("scope", "user:read:chat user:write:chat");
-        return url;
+    async login(): Promise<URL> {
+        return this.twitchService.login("user:read:chat user:write:chat");
     }
 
-    public async oauthCallback(authorizationCode: string): Promise<void> {
-        const oauthTokens: OauthTokens = await this.getOauthTokens(authorizationCode);
-        const accessToken: string = oauthTokens.accessToken ?? ((): string => {
-            throw new Error(`Twitch Account Access Token is undefined.`);
-        })();
-        const accountIds: AccountIds = await this.getAccountIds(accessToken);
-        if (accountIds.twitch !== userAccountId) {
-            throw new Error(`Twitch Account not allowed.`);
-        }
-        const twitch: Twitch = await this.twitchRepository.getOrInsertByAccountId(accountIds.twitch);
-        await this.twitchRepository.updateTokens(twitch.id, oauthTokens.accessToken, oauthTokens.refreshToken);
-    }
+    async onModuleInit(): Promise<void> {
+        await this.twitchService.authorize(userAccountId);
 
-    public async connect(): Promise<void> {
-        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
-        await this.twitchSocketClientManager.connectClient(idView.id, twitchWebsocketUrl);
-    }
-
-    public async disconnect(): Promise<void> {
-        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
-        return this.twitchSocketClientManager.disconnectClient(idView.id);
-    }
-
-    private async getOauthTokens(authorizationCode: string): Promise<OauthTokens> {
-        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(this.httpService, "");
-        const oauthTokensResponse: AxiosResponse<TokenDto.TokenCodeResponseBody> = await httpClient.getOauthTokenByCode(authorizationCode);
-        const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
-            throw new Error("Twitch Access Token is undefined.");
-        })();
-        const refreshToken: string = oauthTokensResponse.data.refresh_token ?? ((): string => {
-            throw new Error("Twitch Refresh Token is undefined.");
-        })();
-
-        return {
-            accessToken: accessToken,
-            refreshToken: refreshToken
-        };
-    }
-
-    private async getAccountIds(accessToken: string): Promise<AccountIds> {
-        const httpClient: TwitchHttpClient = TwitchHttpClient.createInstance(this.httpService, accessToken);
-        const userResponse: AxiosResponse<TokenDto.UserInfoResponseBody> = await httpClient.getOauthUser();
-        const twitchAccountId: string = userResponse.data.sub ?? ((): string => {
-            throw new Error("Twitch Account ID is undefined.");
-        })();
-
-        return {
-            twitch: twitchAccountId
-        };
+        const eventSubWsListener: EventSubWsListener = await this.twitchService.getEventSubWsListener()
+        const channelChatMessageSubscriontion: EventSubSubscription = eventSubWsListener.onChannelChatMessage(userAccountId, userAccountId, (event: EventSubChannelChatMessageEvent): void => {
+            this.logger.verbose(event);
+        });
     }
 
 }

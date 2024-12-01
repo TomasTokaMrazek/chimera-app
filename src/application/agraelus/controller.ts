@@ -1,4 +1,4 @@
-import {Controller, Post} from "@nestjs/common";
+import {Controller} from "@nestjs/common";
 
 import {ApplicationAgraelusService} from "./service";
 
@@ -8,15 +8,5 @@ export class ApplicationAgraelusController {
     constructor(
         private readonly agraelusService: ApplicationAgraelusService
     ) {}
-
-    @Post("connect")
-    public async connect(): Promise<void> {
-        await this.agraelusService.connect();
-    }
-
-    @Post("disconnect")
-    public async disconnect(): Promise<void> {
-        await this.agraelusService.disconnect();
-    }
 
 }

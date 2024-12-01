@@ -1,17 +1,14 @@
 import {Module} from "@nestjs/common";
-
 import {HttpModule} from "@nestjs/axios";
 
-import {TwitchController} from "@chimera/twitch/controller";
-import {TwitchService} from "@chimera/twitch/service";
-import {TwitchHttpClientManager} from "@chimera/twitch/client/http/manager";
-import {TwitchSocketClientManager} from "@chimera/twitch/client/socket/manager";
-import {TwitchRepository} from "@chimera/twitch/repository/repository"
+import {TwitchController} from "./controller";
+import {TwitchService} from "./service";
+import {TwitchRepository} from "./repository/repository"
 
 @Module({
     imports: [HttpModule],
     controllers: [TwitchController],
-    providers: [TwitchService, TwitchHttpClientManager, TwitchSocketClientManager, TwitchRepository],
-    exports: [TwitchService, TwitchHttpClientManager, TwitchSocketClientManager, TwitchRepository]
+    providers: [TwitchService, TwitchRepository],
+    exports: [TwitchService, TwitchRepository]
 })
 export class TwitchModule {}

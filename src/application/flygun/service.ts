@@ -2,8 +2,8 @@ import {Injectable, Logger, OnModuleDestroy, OnModuleInit} from "@nestjs/common"
 import {HttpService} from "@nestjs/axios";
 import {OnEvent} from "@nestjs/event-emitter";
 
-import {lastValueFrom} from "rxjs";
 import {AxiosResponse} from "axios";
+import {lastValueFrom} from "rxjs";
 
 import * as net from "node:net";
 
@@ -11,9 +11,7 @@ import {StreamElementsSocketClientManager} from "@chimera/streamelements/client/
 
 import configuration from "@chimera/configuration";
 
-;
-
-const streamElementsAccountId: string = configuration.app.flygun.streamElementsAccountId;
+const streamElementsUserAccountId: string = configuration.app.flygun.streamElements.userAccountId;
 
 const PORT = 3001;
 const HOST = "0.0.0.0";
@@ -72,13 +70,13 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
 
     async onModuleInit(): Promise<any> {
         this.server.listen(PORT, HOST);
-        await this.streamElementsSocketClientManager.createSocketClient(streamElementsAccountId)
+        await this.streamElementsSocketClientManager.createClient(streamElementsUserAccountId)
             .catch((error: Error): void => this.logger.error(error.message, error.stack));
     }
 
     async onModuleDestroy(): Promise<any> {
         this.server.close();
-        await this.streamElementsSocketClientManager.destroySocketClient(streamElementsAccountId)
+        await this.streamElementsSocketClientManager.destroyClient(streamElementsUserAccountId)
             .catch((error: Error): void => this.logger.error(error.message, error.stack));
     }
 
@@ -110,18 +108,22 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
                     }
                 }
                 amount = Math.ceil(-amount * TIP_MULTIPLIER);
-                this.queue.push([id, amount]);
+                await this.addToQueue(id, amount);
                 break;
             }
             case "subscriber": {
                 let amount: number = Math.ceil(-SUBSCRIPTION_GIFT_VALUE);
                 const gifted: boolean = message.data.gifted;
                 if (gifted) {
-                    this.queue.push([id, amount]);
+                    await this.addToQueue(id, amount);
                 }
                 break;
             }
         }
+    }
+
+    async addToQueue(id: string, amount: number) {
+        this.queue.push([id, amount]);
     }
 
 }

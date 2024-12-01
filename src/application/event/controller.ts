@@ -1,8 +1,9 @@
 import {Body, Controller, Get, Post, Query} from "@nestjs/common";
 
+import {EventSynchronization} from "@prisma/client";
+
 import {ApplicationEventService} from "./service";
 import {EventSyncRequestDto} from "./dto";
-import {EventSynchronization} from "@prisma/client";
 
 @Controller("application/event")
 export class ApplicationEventController {

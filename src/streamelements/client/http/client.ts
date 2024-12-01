@@ -9,7 +9,7 @@ import configuration from "@chimera/configuration";
 
 const streamElementsApi: string = configuration.streamElements.apiUrl;
 
-class StreamElementsHttpClient {
+export class StreamElementsHttpClient {
 
     private constructor(
         private readonly httpService: HttpService,
@@ -72,5 +72,3 @@ class StreamElementsHttpClient {
     }
 
 }
-
-export default StreamElementsHttpClient;

@@ -11,19 +11,36 @@ function getEnvVariable(name: string): string {
     return value;
 }
 
-interface Chatbot {
-    redirectUri: string;
+interface ChatbotTwitch {
     userAccountId: string;
-    adminAccountId: string;
+    adminAccountIds: string[];
+}
+
+interface Chatbot {
+    twitch: ChatbotTwitch;
+}
+
+interface AgraelusTwitch {
+    userAccountId: string;
+    adminAccountIds: string[];
 }
 
 interface Agraelus {
-    twitchAccountId: string;
+    twitch: AgraelusTwitch;
+}
+
+interface FlygunTwitch {
+    userAccountId: string;
+    adminAccountIds: string[];
+}
+
+interface FlygunStreamElements {
+    userAccountId: string;
 }
 
 interface Flygun {
-    twitchAccountId: string;
-    streamElementsAccountId: string;
+    twitch: FlygunTwitch;
+    streamElements: FlygunStreamElements;
 }
 
 interface App {
@@ -76,18 +93,27 @@ interface Configuration {
 }
 
 const chatbot: Chatbot = {
-    redirectUri: config.get("app.chatbot.redirectUri"),
-    userAccountId: config.get("app.chatbot.userAccountId"),
-    adminAccountId: config.get("app.chatbot.adminAccountId")
+    twitch: {
+        userAccountId: config.get("app.chatbot.twitch.userAccountId"),
+        adminAccountIds: config.get("app.chatbot.twitch.adminAccountIds")
+    }
 };
 
 const agraelus: Agraelus = {
-    twitchAccountId: config.get("app.agraelus.twitchAccountId")
+    twitch: {
+        userAccountId: config.get("app.agraelus.twitch.userAccountId"),
+        adminAccountIds: config.get("app.agraelus.twitch.adminAccountIds")
+    }
 };
 
 const flygun: Flygun = {
-    twitchAccountId: config.get("app.flygun.twitchAccountId"),
-    streamElementsAccountId: config.get("app.flygun.streamElementsAccountId")
+    twitch: {
+        userAccountId: config.get("app.flygun.twitch.userAccountId"),
+        adminAccountIds: config.get("app.flygun.twitch.adminAccountIds")
+    },
+    streamElements: {
+        userAccountId: config.get("app.flygun.streamElements.userAccountId")
+    }
 };
 
 const app: App = {

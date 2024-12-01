@@ -1,15 +1,15 @@
-import {Injectable} from '@nestjs/common';
+import {Injectable} from "@nestjs/common";
 import {HttpService} from "@nestjs/axios";
 
 import {AxiosResponse} from "axios";
 
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {Twitch, StreamElements} from "@prisma/client";
+import {StreamElements, Twitch} from "@prisma/client";
 
 import {StreamElementsRepository} from "./repository/repository";
 import {IdView} from "./repository/views";
 
-import StreamElementsHttpClient from "./client/http/client";
+import {StreamElementsHttpClient} from "./client/http/client";
 import * as HttpDto from "./client/http/dto";
 
 @Injectable()

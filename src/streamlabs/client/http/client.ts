@@ -13,7 +13,7 @@ const redirectUri: string = configuration.streamLabs.redirectUri;
 const clientID: string = configuration.streamLabs.clientId;
 const clientSecret: string = configuration.streamLabs.clientSecret;
 
-class StreamLabsHttpClient {
+export class StreamLabsHttpClient {
 
     private constructor(
         private readonly httpService: HttpService,
@@ -23,7 +23,6 @@ class StreamLabsHttpClient {
     static createInstance(httpService: HttpService, accessToken: string): StreamLabsHttpClient {
         return new StreamLabsHttpClient(httpService, accessToken);
     }
-
 
     public getOauthTokens(authorizationCode: string): Promise<AxiosResponse<Dto.TokenResponse>> {
         const config: AxiosRequestConfig = {
@@ -84,5 +83,3 @@ class StreamLabsHttpClient {
     }
 
 }
-
-export default StreamLabsHttpClient;

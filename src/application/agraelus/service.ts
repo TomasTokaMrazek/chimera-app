@@ -1,54 +1,30 @@
-import {Injectable, Logger} from "@nestjs/common";
+import {Injectable, Logger, OnModuleInit} from "@nestjs/common";
 import {HttpService} from "@nestjs/axios";
 
-import WebSocket from "ws";
-import {isValid, differenceInSeconds, format} from "date-fns";
+import {AxiosResponse} from "axios";
+import {differenceInSeconds, format, isValid} from "date-fns";
 import {cs} from "date-fns/locale";
 
-import {AxiosResponse} from "axios";
+import {ApiClient, HelixUser} from "@twurple/api";
+import {EventSubWsListener} from "@twurple/eventsub-ws";
+import {EventSubSubscription} from "@twurple/eventsub-base/lib/subscriptions/EventSubSubscription";
+import {EventSubChannelChatMessageEvent} from "@twurple/eventsub-base/lib/events/EventSubChannelChatMessageEvent";
 
-import {TwitchRepository} from "@chimera/twitch/repository/repository";
-import {IdView} from "@chimera/twitch/repository/views";
-
-import {TwitchSocketClientManager} from "@chimera/twitch/client/socket/manager";
-import TwitchSocketClient, {HandleMessageFunction} from "@chimera/twitch/client/socket/client";
-import * as Message from "@chimera/twitch/client/socket/dto/message";
-import * as Event from "@chimera/twitch/client/socket/dto/event";
-
-import {TwitchHttpClientManager} from "@chimera/twitch/client/http/manager";
-import TwitchHttpClient from "@chimera/twitch/client/http/client";
-import * as EventSub from "@chimera/twitch/client/http/dto/eventsub";
-import * as User from "@chimera/twitch/client/http/dto/user";
-import * as Chat from "@chimera/twitch/client/http/dto/chat";
+import {TwitchService} from "@chimera/twitch/service";
 
 import WheelOfNamesClient from "@chimera/wheelofnames/client/http/client";
 import * as Wheel from "@chimera/wheelofnames/client/http/dto";
 
 import configuration from "@chimera/configuration";
+import {BaseApiClient} from "@twurple/api/lib/client/BaseApiClient";
 
-const twitchWebsocketUrl: string = configuration.twitch.websocketUrl;
-const twitchOauthUrl: string = configuration.twitch.oauthUrl;
-const clientID: string = configuration.twitch.clientId;
-const redirectUri: string = configuration.app.chatbot.redirectUri;
-const userAccountId: string = configuration.app.chatbot.userAccountId;
-const adminAccountId: string = configuration.app.chatbot.adminAccountId;
-
+const chatbotAccountId: string = configuration.app.chatbot.twitch.userAccountId;
+const agraelusUserAccountId: string = configuration.app.agraelus.twitch.userAccountId;
+const agraelusAdminAccountId: string[] = configuration.app.agraelus.twitch.adminAccountIds;
 const wheelOfNamesUrl: string = configuration.wheelOfNames.url;
 
-const cekybotAccountId: string = "807488577"; //cekybot2
-const tokaAccountId: string = "69887790"; //TokaTheFirst
-const agraelusAccountId: string = "36620767"; //Agraelus
-const appAccountId: string = "1119298268"; //ChimeraApp
-
 @Injectable()
-export class ApplicationAgraelusService {
-
-    constructor(
-        private readonly httpService: HttpService,
-        private readonly twitchRepository: TwitchRepository,
-        private readonly twitchSocketClientManager: TwitchSocketClientManager,
-        private readonly twitchHttpClientManager: TwitchHttpClientManager
-    ) {}
+export class ApplicationAgraelusService implements OnModuleInit {
 
     private readonly logger: Logger = new Logger(ApplicationAgraelusService.name);
 
@@ -56,110 +32,62 @@ export class ApplicationAgraelusService {
     private numberOfUsers: number = 0;
     private users: string[] = [];
 
-    private subscriptionId: string = "";
+    constructor(
+        private readonly httpService: HttpService,
+        private readonly twitchService: TwitchService
+    ) {}
 
-    private handleMessage: HandleMessageFunction = async (data: WebSocket.RawData): Promise<void> => {
-        const parsedData = JSON.parse(data.toString());
-        const messageType: string = parsedData.metadata.message_type;
-        switch (messageType) {
-            case "notification": {
-                const message: Message.NotificationMessage = parsedData as Message.NotificationMessage;
-                if (message.payload.subscription.id !== this.subscriptionId) {
-                    return;
+    async onModuleInit(): Promise<void> {
+        await this.twitchService.authorize(chatbotAccountId);
+
+        const eventSubWsListener: EventSubWsListener = await this.twitchService.getEventSubWsListener();
+        const channelChatMessageSubscriontion: EventSubSubscription = eventSubWsListener.onChannelChatMessage(agraelusUserAccountId, chatbotAccountId, this.handleEvent);
+    }
+
+    private readonly handleEvent: (event: EventSubChannelChatMessageEvent) => Promise<void> = async (event: EventSubChannelChatMessageEvent): Promise<void> => {
+        const chatterUserId: string = event.chatterId;
+        const chatMessage: string = event.messageText;
+        if (agraelusAdminAccountId.includes(chatterUserId)) {
+            if (isValid(this.firstMessage)) {
+                const difference: number = differenceInSeconds(new Date(), this.firstMessage);
+                if (difference > 10) {
+                    this.reset();
                 }
+            }
 
-                const event: Event.ChannelChatMessage = message.payload.event as Event.ChannelChatMessage;
+            if (chatMessage.startsWith("Seznam")) {
+                this.firstMessage = new Date();
+                const numberOfUsers: string = chatMessage.substring(chatMessage.indexOf("Seznam[") + 7, chatMessage.indexOf("]") + 1);
+                this.numberOfUsers = parseInt(numberOfUsers);
+                const users: string[] = chatMessage
+                    .substring(chatMessage.indexOf("- ") + 2)
+                    .split(";")
+                    .map((user: string): string => user.trim())
+                    .filter((user: string): boolean => user.length > 0);
+                this.users.push(...users);
+            } else if (isValid(this.firstMessage)) {
+                const users: string[] = chatMessage
+                    .split(";")
+                    .map((user: string): string => user.trim())
+                    .filter((user: string): boolean => user.length > 0);
+                this.users.push(...users);
+            } else {
+                return;
+            }
 
-                const chatterUserId: string = event.chatter_user_id;
-                const chatMessage: string = event.message.text;
-                if (chatterUserId === tokaAccountId || chatterUserId === cekybotAccountId) {
-                    if (isValid(this.firstMessage)) {
-                        const difference: number = differenceInSeconds(new Date(), this.firstMessage);
-                        if (difference > 10) {
-                            this.reset();
-                        }
-                    }
-
-                    if (chatMessage.startsWith("Seznam")) {
-                        this.firstMessage = new Date();
-                        const numberOfUsers: string = chatMessage.substring(chatMessage.indexOf("Seznam[") + 7, chatMessage.indexOf("]") + 1);
-                        this.numberOfUsers = parseInt(numberOfUsers);
-                        const users: string[] = chatMessage
-                            .substring(chatMessage.indexOf("- ") + 2)
-                            .split(";")
-                            .map((user: string) => user.trim())
-                            .filter((user: string): boolean => user.length > 0);
-                        this.users.push(...users);
-                    } else if (isValid(this.firstMessage)) {
-                        const users: string[] = chatMessage
-                            .split(";")
-                            .map((user: string) => user.trim())
-                            .filter((user: string): boolean => user.length > 0);
-                        this.users.push(...users);
-                    } else {
-                        return;
-                    }
-
-                    if (this.users.length === this.numberOfUsers) {
-                        this.logger.log(`WheelOfNames | Number: ${this.numberOfUsers}, Users: ${this.users}`);
-                        const path: string = await this.wheelOfNames();
-                        const url: string = wheelOfNamesUrl.concat("/").concat(path);
-                        this.logger.log(`WheelOfNames URL: ${url}`);
-                        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
-                        const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(idView.id);
-                        const body: Chat.SendChatMessageRequestBody = {
-                            broadcaster_id: agraelusAccountId,
-                            sender_id: userAccountId,
-                            message: url + " <- agrTocka @Agraelus"
-                        };
-                        await httpClient.sentChatMessage(body);
-                        this.reset();
-                    }
-                }
-                break;
+            if (this.users.length === this.numberOfUsers) {
+                this.logger.log(`WheelOfNames | Number: ${this.numberOfUsers}, Users: ${this.users}`);
+                const path: string = await this.wheelOfNames();
+                const url: string = wheelOfNamesUrl.concat("/").concat(path);
+                this.logger.log(`WheelOfNames URL: ${url}`);
+                const apiClient: ApiClient = await this.twitchService.getApiClient();
+                await apiClient.asUser(chatbotAccountId, async (ctx: BaseApiClient): Promise<void> => {
+                    await ctx.chat.sendChatMessage(agraelusUserAccountId, url + " <- agrTocka @Agraelus");
+                });
+                this.reset();
             }
         }
     };
-
-    public async connect(): Promise<void> {
-        if (this.subscriptionId.length > 0) {
-            return;
-        }
-
-        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
-        const socketClient: TwitchSocketClient = await this.twitchSocketClientManager.getSocketClient(idView.id);
-
-        const sessionId: string = socketClient.sessionId;
-
-        const requestBody: EventSub.CreateEventSubSubscriptionRequestBody = {
-            type: "channel.chat.message",
-            version: "1",
-            condition: {
-                broadcaster_user_id: agraelusAccountId,
-                user_id: userAccountId
-            },
-            transport: {
-                method: EventSub.EventSubSubscriptionTransportMethod.WEBSOCKET,
-                session_id: sessionId
-            }
-        };
-
-        this.subscriptionId = await socketClient.subscribe(idView.id, requestBody, this.handleMessage);
-        this.logger.log(`Agraelus Spin Wheel event subscription id: ${this.subscriptionId}`);
-    }
-
-    public async disconnect(): Promise<void> {
-        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
-        const socketClient: TwitchSocketClient = await this.twitchSocketClientManager.getSocketClient(idView.id);
-
-        const requestParams: EventSub.DeleteEventSubSubscriptionRequestParams = {
-            id: this.subscriptionId
-        };
-
-        await socketClient.unsubscribe(idView.id, requestParams, this.handleMessage);
-
-        this.subscriptionId = "";
-    }
 
     private reset(): void {
         this.firstMessage = new Date(NaN);
@@ -168,55 +96,19 @@ export class ApplicationAgraelusService {
     }
 
     private async wheelOfNames(): Promise<string> {
-        const idView: IdView = await this.twitchRepository.getIdByAccountId(userAccountId);
-        const httpClient: TwitchHttpClient = await this.twitchHttpClientManager.getHttpClient(idView.id);
+        const uniqueUsers: Array<string> = Array.from(new Set(this.users.filter((user: string): boolean => !/\W/.test(user))));
 
-        const uniqueUsers: Set<string> = new Set(this.users.filter((user: string) => !/\W/.test(user)));
+        const apiClient: ApiClient = await this.twitchService.getApiClient();
+        const helixUsers: HelixUser[] = await apiClient.users.getUsersByNames(uniqueUsers);
+        const helixUserColors: Map<string, string | null> = await apiClient.chat.getColorsForUsers(helixUsers);
 
-        const chunk = (size: number) => (array: any[]) => array.reduce((result: any[][], item: any) => {
-            if (result[result.length - 1].length < size) {
-                result[result.length - 1].push(item);
-            } else {
-                result.push([item]);
-            }
-            return result;
-        }, [[]]);
-
-        const getUsersResponses: AxiosResponse<User.GetUsersResponseBody>[] = await Promise.all(
-            chunk(100)(Array.from(uniqueUsers)).map((chunkUsers: string[]): Promise<AxiosResponse<User.GetUsersResponseBody>> => {
-                const requestParams: User.GetUsersRequestParams = {
-                    login: chunkUsers
-                };
-                return httpClient.getUsers(requestParams);
-            })
-        );
-
-        const twitchUsers: User.GetUsersResponseData[] = getUsersResponses.flatMap((response: AxiosResponse<User.GetUsersResponseBody>) => {
-            return response.data.data;
+        const entries: Wheel.Entry[] = helixUsers.map((user: HelixUser): Wheel.Entry => {
+            return {
+                text: user.displayName,
+                color: helixUserColors.get(user.id) ?? undefined,
+                weight: 1
+            };
         });
-
-        const getUsersChatColorResponses: AxiosResponse<Chat.GetUsersChatColorResponseBody>[] = await Promise.all(
-            chunk(100)(twitchUsers).map((chunkUsers: User.GetUsersResponseData[]): Promise<AxiosResponse<Chat.GetUsersChatColorResponseBody>> => {
-                const requestParams: Chat.GetUsersChatColorRequestParams = {
-                    user_id: chunkUsers.map((chunkUser: User.GetUsersResponseData) => chunkUser.id)
-                };
-                return httpClient.getUsersChatColor(requestParams);
-            })
-        );
-
-        const twitchUsersWithColor: Chat.GetUsersChatColorResponseData[] = getUsersChatColorResponses.flatMap((response: AxiosResponse<Chat.GetUsersChatColorResponseBody>) => {
-            return response.data.data;
-        });
-
-        const entries: Wheel.Entry[] = Array.from(twitchUsersWithColor)
-            .map((twitchUserWithColor: Chat.GetUsersChatColorResponseData) => {
-                const entry: Wheel.Entry = {
-                    text: twitchUserWithColor.user_name,
-                    color: twitchUserWithColor.color,
-                    weight: 1
-                };
-                return entry;
-            });
 
         const body: Wheel.PostRequest = {
             wheelConfig: {
