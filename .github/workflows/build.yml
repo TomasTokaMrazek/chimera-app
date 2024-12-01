@@ -27,20 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.10.0'
-
-      - name: NPM - Clean Install
-        run: npm ci
-
-      - name: NPM - Run Build
-        run: npm run build
-
-      - name: NPM - Prune
-        run: npm prune --omit=dev
-
       - name: Docker - Login
         uses: docker/login-action@v3
         with:
