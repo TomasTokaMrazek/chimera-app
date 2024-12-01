@@ -9,9 +9,9 @@ export class StreamElementsController {
         private readonly streamElementsService: StreamElementsService
     ) {}
 
-    @Get("login")
-    public async login(@Query() jwt: string): Promise<void> {
-        await this.streamElementsService.login(jwt);
+    @Get("authorize")
+    public async authorize(@Query() jwt: string): Promise<void> {
+        await this.streamElementsService.authorize(jwt);
     }
 
 }

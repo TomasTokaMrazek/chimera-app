@@ -10,9 +10,9 @@ export class TwitchController {
     ) {}
 
     @Redirect()
-    @Get("login")
-    public async login(@Query() scope: string): Promise<{ url: URL }> {
-        const url: URL = await this.twitchService.login(scope);
+    @Get("authorize")
+    public async authorize(@Query() scope: string): Promise<{ url: URL }> {
+        const url: URL = await this.twitchService.authorize(scope);
         return {url: url};
     }
 

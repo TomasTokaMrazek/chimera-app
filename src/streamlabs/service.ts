@@ -29,7 +29,7 @@ export class StreamLabsService {
 
     private readonly httpClients: Map<string, StreamLabsHttpClient> = new Map();
 
-    public async login(): Promise<URL> {
+    public async authorize(): Promise<URL> {
         const url: URL = new URL(streamLabsOauthUrl + "/authorize");
         url.searchParams.append("response_type", "code");
         url.searchParams.append("client_id", clientID);

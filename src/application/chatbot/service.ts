@@ -19,12 +19,12 @@ export class ApplicationChatbotService implements OnModuleInit {
         private readonly twitchService: TwitchService
     ) {}
 
-    async login(): Promise<URL> {
-        return this.twitchService.login("user:read:chat user:write:chat");
+    async authorize(): Promise<URL> {
+        return this.twitchService.authorize("user:read:chat user:write:chat");
     }
 
     async onModuleInit(): Promise<void> {
-        await this.twitchService.authorize(userAccountId);
+        await this.twitchService.login(userAccountId);
 
         const eventSubWsListener: EventSubWsListener = await this.twitchService.getEventSubWsListener()
         const channelChatMessageSubscriontion: EventSubSubscription = eventSubWsListener.onChannelChatMessage(userAccountId, userAccountId, (event: EventSubChannelChatMessageEvent): void => {

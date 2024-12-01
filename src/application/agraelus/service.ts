@@ -38,7 +38,7 @@ export class ApplicationAgraelusService implements OnModuleInit {
     ) {}
 
     async onModuleInit(): Promise<void> {
-        await this.twitchService.authorize(chatbotAccountId);
+        await this.twitchService.login(chatbotAccountId);
 
         const eventSubWsListener: EventSubWsListener = await this.twitchService.getEventSubWsListener();
         const channelChatMessageSubscriontion: EventSubSubscription = eventSubWsListener.onChannelChatMessage(agraelusUserAccountId, chatbotAccountId, this.handleEvent);

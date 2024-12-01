@@ -82,7 +82,7 @@ export class TwitchService implements OnModuleInit, OnModuleDestroy {
         this.eventSubWsListener.stop();
     }
 
-    async login(scope: string): Promise<URL> {
+    async authorize(scope: string): Promise<URL> {
         const url: URL = new URL(twitchOauthUrl + "/authorize");
         url.searchParams.append("response_type", "code");
         url.searchParams.append("client_id", clientId);
@@ -95,7 +95,7 @@ export class TwitchService implements OnModuleInit, OnModuleDestroy {
         await this.authProvider.addUserForCode(authorizationCode);
     }
 
-    async authorize(accountId: string): Promise<void> {
+    async login(accountId: string): Promise<void> {
         const twitch: Twitch = await this.twitchRepository.getByAccountId(accountId);
         const accessToken: string = twitch.access_token ?? ((): string => {
             throw new Error(`Twitch Account ID '${accountId}' does not have Access Token.`);

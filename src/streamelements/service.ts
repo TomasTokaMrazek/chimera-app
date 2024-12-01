@@ -23,7 +23,7 @@ export class StreamElementsService {
 
     private readonly httpClients: Map<string, StreamElementsHttpClient> = new Map();
 
-    public async login(jwt: string): Promise<void> {
+    public async authorize(jwt: string): Promise<void> {
         const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(this.httpService, jwt);
         const userResponse: AxiosResponse<HttpDto.CurrentUserRequest> = await httpclient.getCurrentUser();
         const channel: any = userResponse.data.channels.find((channel: HttpDto.CurrentUserChannel): boolean => channel.provider == "twitch") ?? ((): any => {

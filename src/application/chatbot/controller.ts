@@ -10,9 +10,9 @@ export class ApplicationChatbotController {
     ) {}
 
     @Redirect()
-    @Get("login")
-    public async login(): Promise<{ url: URL }> {
-        const url: URL = await this.chatbotService.login();
+    @Get("authorize")
+    public async authorize(): Promise<{ url: URL }> {
+        const url: URL = await this.chatbotService.authorize();
         return {url: url};
     }
 

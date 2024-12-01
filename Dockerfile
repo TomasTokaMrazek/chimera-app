@@ -10,4 +10,4 @@ EXPOSE 3000 3001
 
 USER node
 
-CMD ["dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

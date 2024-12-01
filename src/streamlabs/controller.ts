@@ -10,9 +10,9 @@ export class StreamLabsController {
     ) {}
 
     @Redirect()
-    @Get("login")
-    public async login(): Promise<{ url: URL }> {
-        const url: URL = await this.streamLabsService.login();
+    @Get("authorize")
+    public async authorize(): Promise<{ url: URL }> {
+        const url: URL = await this.streamLabsService.authorize();
         return {url: url};
     }
 
