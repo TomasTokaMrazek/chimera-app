@@ -28,16 +28,16 @@
     "module": "commonjs",                                /* Specify what module code is generated. */
     "rootDir": "./src",                                  /* Specify the root folder within your source files. */
     // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
-    "baseUrl": "./src",                                  /* Specify the base directory to resolve non-relative module names. */
+    "baseUrl": ".",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {
-      "@chimera/configuration": ["configuration"],
-      "@chimera/prisma": ["prisma.service"],
-      "@chimera/prisma/client": ["../node_modules/.prisma/client"],
-      "@chimera/application/*": ["application/*"],
-      "@chimera/streamelements/*": ["streamelements/*"],
-      "@chimera/streamlabs/*": ["streamlabs/*"],
-      "@chimera/twitch/*": ["twitch/*"],
-      "@chimera/wheelofnames/*": ["wheelofnames/*"]
+      "@chimera/prisma/client": ["./dist/generated/prisma/client"],
+      "@chimera/configuration": ["./src/configuration"],
+      "@chimera/prisma/*": ["./src/prisma/*"],
+      "@chimera/application/*": ["./src/application/*"],
+      "@chimera/streamelements/*": ["./src/streamelements/*"],
+      "@chimera/streamlabs/*": ["./src/streamlabs/*"],
+      "@chimera/twitch/*": ["./src/twitch/*"],
+      "@chimera/wheelofnames/*": ["./src/wheelofnames/*"]
     },                                                   /* Specify a set of entries that re-map imports to additional lookup locations. */
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

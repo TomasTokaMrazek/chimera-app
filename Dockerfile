@@ -1,20 +1,33 @@
-FROM node:22.10.0-bookworm
+FROM node:22.10.0-bookworm AS builder
+
+WORKDIR /build
+
+COPY package*.json .
+RUN npm ci
+
+COPY prisma/ ./prisma/
+RUN npx prisma generate
+
+COPY tsconfig.json .
+COPY src/ ./src/
+RUN npx tsc && npx tsc-alias
+
+COPY config/ ./config/
+
+
+FROM node:22.10.0-alpine AS runner
 
 ENV NODE_ENV=production
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY --from=builder build/package*.json .
+COPY --from=builder build/prisma/ ./prisma/
+COPY --from=builder build/dist/ ./dist/
+COPY --from=builder build/config/ ./config/
 
-RUN npm ci
+RUN npm ci --omit=dev
 
 USER node
-
-COPY --chown=node:node prisma/ ./prisma/
-COPY --chown=node:node src/ ./src/
-
-RUN npx tsc && npx tsc-alias
-
-EXPOSE 3000 3001
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

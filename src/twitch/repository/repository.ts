@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 
-import {PrismaService} from "@chimera/prisma";
+import {PrismaService} from "@chimera/prisma/service";
 import {Twitch} from "@chimera/prisma/client";
 
 import {AccountIdView, IdView, UserView} from "./views";

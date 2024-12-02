@@ -6,7 +6,7 @@ import {APP_PIPE} from "@nestjs/core";
 
 import {ZodValidationPipe} from "nestjs-zod";
 
-import {PrismaModule} from "prisma.module";
+import {PrismaModule} from "@chimera/prisma/module";
 import {TwitchModule} from "@chimera/twitch/module";
 import {StreamElementsModule} from "@chimera/streamelements/module";
 import {StreamLabsModule} from "@chimera/streamlabs/module";

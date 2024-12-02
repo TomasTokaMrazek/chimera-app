@@ -1,6 +1,6 @@
 import {Module, Global} from "@nestjs/common";
 
-import {PrismaService} from "@chimera/prisma";
+import {PrismaService} from "./service";
 
 @Global()
 @Module({
