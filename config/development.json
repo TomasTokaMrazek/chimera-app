@@ -1,0 +1,27 @@
+{
+    "app": {
+        "url": "https://development.tomastokamrazek.cz",
+        "port": 3000,
+        "chatbot": {
+            "twitch": {
+                "userAccountId": "1119298268",
+                "adminAccountIds": ["69887790"]
+            }
+        },
+        "agraelus": {
+            "twitch": {
+                "userAccountId": "69887790",
+                "adminAccountIds": ["69887790"]
+            }
+        },
+        "flygun": {
+            "twitch": {
+                "userAccountId": "69887790",
+                "adminAccountIds": ["69887790"]
+            },
+            "streamElements": {
+                "userAccountId": "600cea4f0b1e577f084d5eac"
+            }
+        }
+    }
+}
