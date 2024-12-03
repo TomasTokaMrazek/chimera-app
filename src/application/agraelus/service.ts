@@ -96,11 +96,34 @@ export class ApplicationAgraelusService implements OnModuleInit {
     }
 
     private async wheelOfNames(): Promise<string> {
+        const chunk = (size: number) => (array: any[]) => array.reduce((result: any[][], item: any) => {
+            if (result[result.length - 1].length < size) {
+                result[result.length - 1].push(item);
+            } else {
+                result.push([item]);
+            }
+            return result;
+        }, [[]]);
+
         const uniqueUsers: Array<string> = Array.from(new Set(this.users.filter((user: string): boolean => !/\W/.test(user))));
 
         const apiClient: ApiClient = await this.twitchService.getApiClient();
-        const helixUsers: HelixUser[] = await apiClient.users.getUsersByNames(uniqueUsers);
-        const helixUserColors: Map<string, string | null> = await apiClient.chat.getColorsForUsers(helixUsers);
+
+        const userChunks: string[][] = this.chunkArray(uniqueUsers, 100);
+        const helixUsers: HelixUser[] = [];
+        for (const chunk of userChunks) {
+            const usersFromApi: HelixUser[] = await apiClient.users.getUsersByNames(chunk);
+            helixUsers.push(...usersFromApi);
+        }
+
+        const helixUserChunks: HelixUser[][] = this.chunkArray(helixUsers, 100);
+        const helixUserColors: Map<string, string | null> = new Map();
+        for (const chunk of helixUserChunks) {
+            const colorsFromApi: Map<string, string | null> = await apiClient.chat.getColorsForUsers(chunk);
+            for (const [key, value] of colorsFromApi) {
+                helixUserColors.set(key, value);
+            }
+        }
 
         const entries: Wheel.Entry[] = helixUsers.map((user: HelixUser): Wheel.Entry => {
             return {
@@ -133,6 +156,14 @@ export class ApplicationAgraelusService implements OnModuleInit {
         }
 
         return response.data.data.path;
+    }
+
+    private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+        const chunks: T[][] = [];
+        for (let i = 0; i < array.length; i += chunkSize) {
+            chunks.push(array.slice(i, i + chunkSize));
+        }
+        return chunks;
     }
 
 }
