@@ -88,7 +88,7 @@ export class ApplicationEventService {
                     const streamElementsId: number = user.streamelements_id ?? ((): number => {
                         throw new Error(`User ID '${user.id}' does not have Stream Elements ID.`);
                     })();
-                    const streamElementsHttpClient: StreamElementsHttpClient = await this.streamElementsService.getHttpClient(streamElementsId);
+                    const streamElementsHttpClient: StreamElementsHttpClient = await this.streamElementsService.getHttpClient(accountId);
 
                     const currentUserChannelResponse: AxiosResponse<CurrentUserChannel> = await streamElementsHttpClient.getCurrentUserChannel();
 

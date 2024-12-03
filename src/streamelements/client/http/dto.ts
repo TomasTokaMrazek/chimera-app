@@ -78,3 +78,12 @@ export interface TipListDonationUser {
     email?: string;
     channel?: string;
 }
+
+export interface BotCounterUpdateRequest {
+    count: number;
+}
+
+export interface BotCounter {
+    id: string;
+    count: number;
+}

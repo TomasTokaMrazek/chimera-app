@@ -96,15 +96,6 @@ export class ApplicationAgraelusService implements OnModuleInit {
     }
 
     private async wheelOfNames(): Promise<string> {
-        const chunk = (size: number) => (array: any[]) => array.reduce((result: any[][], item: any) => {
-            if (result[result.length - 1].length < size) {
-                result[result.length - 1].push(item);
-            } else {
-                result.push([item]);
-            }
-            return result;
-        }, [[]]);
-
         const uniqueUsers: Array<string> = Array.from(new Set(this.users.filter((user: string): boolean => !/\W/.test(user))));
 
         const apiClient: ApiClient = await this.twitchService.getApiClient();
@@ -160,7 +151,7 @@ export class ApplicationAgraelusService implements OnModuleInit {
 
     private chunkArray<T>(array: T[], chunkSize: number): T[][] {
         const chunks: T[][] = [];
-        for (let i = 0; i < array.length; i += chunkSize) {
+        for (let i: number = 0; i < array.length; i += chunkSize) {
             chunks.push(array.slice(i, i + chunkSize));
         }
         return chunks;

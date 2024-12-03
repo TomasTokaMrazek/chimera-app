@@ -7,6 +7,8 @@ import {lastValueFrom} from "rxjs";
 
 import * as net from "node:net";
 
+import {StreamElementsService} from "@chimera/streamelements/service";
+import {StreamElementsHttpClient} from "@chimera/streamelements/client/http/client";
 import {StreamElementsSocketClientManager} from "@chimera/streamelements/client/socket/manager";
 
 import configuration from "@chimera/configuration";
@@ -48,8 +50,9 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
                 }
                 case "GET": {
                     const [id, amount] = this.queue.shift() ?? ["", 0];
-                    socket.write(`${amount}\n`, (): void => {
+                    socket.write(`${amount}\n`, async (): Promise<void> => {
                         this.logger.verbose(`Response: ${amount}`);
+                        await this.updateCounter(amount);
                     });
                     break;
                 }
@@ -65,6 +68,7 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
 
     constructor(
         private readonly httpService: HttpService,
+        private readonly streamElementsService: StreamElementsService,
         private readonly streamElementsSocketClientManager: StreamElementsSocketClientManager
     ) {}
 
@@ -78,6 +82,15 @@ export class ApplicationFlygunService implements OnModuleInit, OnModuleDestroy {
         this.server.close();
         await this.streamElementsSocketClientManager.destroyClient(streamElementsUserAccountId)
             .catch((error: Error): void => this.logger.error(error.message, error.stack));
+    }
+
+    async updateCounter(amount: number): Promise<void> {
+        if (amount !== 0) {
+            const httpClient: StreamElementsHttpClient = await this.streamElementsService.getHttpClient(streamElementsUserAccountId);
+            await httpClient.updateBotCounter(streamElementsUserAccountId, "hobo.mince", {
+                count: -amount
+            })
+        }
     }
 
     @OnEvent("streamelements.event")

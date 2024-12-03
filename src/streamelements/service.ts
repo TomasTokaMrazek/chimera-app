@@ -24,8 +24,8 @@ export class StreamElementsService {
     private readonly httpClients: Map<string, StreamElementsHttpClient> = new Map();
 
     public async authorize(jwt: string): Promise<void> {
-        const httpclient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(this.httpService, jwt);
-        const userResponse: AxiosResponse<HttpDto.CurrentUserRequest> = await httpclient.getCurrentUser();
+        const httpClient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(this.httpService, jwt);
+        const userResponse: AxiosResponse<HttpDto.CurrentUserRequest> = await httpClient.getCurrentUser();
         const channel: any = userResponse.data.channels.find((channel: HttpDto.CurrentUserChannel): boolean => channel.provider == "twitch") ?? ((): any => {
             throw new Error("StreamElements Twitch  is undefined.");
         })();
@@ -42,12 +42,15 @@ export class StreamElementsService {
         await this.streamElementsRepository.updateTokens(streamElementsId.id, jwt);
     }
 
-    public async getHttpClient(id: number): Promise<StreamElementsHttpClient> {
-        const streamElements: StreamElements = await this.streamElementsRepository.getById(id);
-        const accountId: string = streamElements.account_id ?? ((): string => {
-            throw new Error(`StreamElements Account ID for ID '${id}' does not exist.`);
-        })();
-
+    public async getHttpClient(accountId: string): Promise<StreamElementsHttpClient> {
+        if (!this.httpClients.has(accountId)) {
+            const streamElements: StreamElements = await this.streamElementsRepository.getByAccountId(accountId);
+            const jwt: string = streamElements.jwt ?? ((): string => {
+                throw new Error(`StreamElements Account ID '${accountId}' jwt does not exist.`);
+            })();
+            const httpClient: StreamElementsHttpClient = StreamElementsHttpClient.createInstance(this.httpService, jwt);
+            this.httpClients.set(accountId, httpClient);
+        }
         return this.httpClients.get(accountId) ?? ((): StreamElementsHttpClient => {
             throw new Error("StreamElements HTTP client is undefined.");
         })();

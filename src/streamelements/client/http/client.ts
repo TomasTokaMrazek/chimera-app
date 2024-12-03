@@ -71,4 +71,14 @@ export class StreamElementsHttpClient {
         return lastValueFrom(this.httpService.get(`${streamElementsApi}/tips/${channel}/${tipId}`, config));
     }
 
+    public updateBotCounter(channel: string, counter: string, body: Dto.BotCounterUpdateRequest): Promise<AxiosResponse<Dto.BotCounter>> {
+        const config: AxiosRequestConfig = {
+            headers: {
+                "Authorization": `Bearer ${this.jwt}`
+            }
+        };
+
+        return lastValueFrom(this.httpService.put(`${streamElementsApi}/bot/${channel}/counters/${counter}`, body, config));
+    }
+
 }
