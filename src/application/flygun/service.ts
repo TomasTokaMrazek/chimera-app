@@ -18,8 +18,8 @@ const streamElementsUserAccountId: string = configuration.app.flygun.streamEleme
 const PORT = 3001;
 const HOST = "0.0.0.0";
 
-const TIP_MULTIPLIER = 2;
-const SUBSCRIPTION_GIFT_VALUE = 150;
+const TIP_MULTIPLIER = 1;
+const SUBSCRIPTION_GIFT_VALUE = 100;
 
 const CURRENCY_EXCHANGE_RATE_URL = "https://data.kurzy.cz/json/meny/b[6].json";
 
