@@ -1,4 +1,4 @@
-FROM node:22.10.0-bookworm AS builder
+FROM node:22.13.1-bookworm AS builder
 
 WORKDIR /build
 
@@ -15,7 +15,7 @@ RUN npx tsc && npx tsc-alias
 COPY config/ ./config/
 
 
-FROM node:22.10.0-alpine AS runner
+FROM node:22.13.1-alpine AS runner
 
 ENV NODE_ENV=production
 
