@@ -28,7 +28,7 @@ export class ApplicationAgraelusService implements OnModuleInit {
 
     private readonly logger: Logger = new Logger(ApplicationAgraelusService.name);
 
-    private firstMessage: Date = new Date(NaN);
+    private lastMessage: Date = new Date(NaN);
     private numberOfUsers: number = 0;
     private users: string[] = [];
 
@@ -48,15 +48,16 @@ export class ApplicationAgraelusService implements OnModuleInit {
         const chatterUserId: string = event.chatterId;
         const chatMessage: string = event.messageText;
         if (agraelusAdminAccountId.includes(chatterUserId)) {
-            if (isValid(this.firstMessage)) {
-                const difference: number = differenceInSeconds(new Date(), this.firstMessage);
+            if (isValid(this.lastMessage)) {
+                const difference: number = differenceInSeconds(new Date(), this.lastMessage);
                 if (difference > 10) {
                     this.reset();
                 }
             }
 
             if (chatMessage.startsWith("Seznam")) {
-                this.firstMessage = new Date();
+                this.lastMessage = new Date();
+                this.logger.log(`WheelOfNames | Last Message: ${this.lastMessage}`);
                 const numberOfUsers: string = chatMessage.substring(chatMessage.indexOf("Seznam[") + 7, chatMessage.indexOf("]") + 1);
                 this.numberOfUsers = parseInt(numberOfUsers);
                 const users: string[] = chatMessage
@@ -64,12 +65,16 @@ export class ApplicationAgraelusService implements OnModuleInit {
                     .split(";")
                     .map((user: string): string => user.trim())
                     .filter((user: string): boolean => user.length > 0);
+                this.logger.log(`WheelOfNames | Number of Users: ${users.length}`);
                 this.users.push(...users);
-            } else if (isValid(this.firstMessage)) {
+            } else if (isValid(this.lastMessage)) {
+                this.lastMessage = new Date();
+                this.logger.log(`WheelOfNames | Last Message: ${this.lastMessage}`);
                 const users: string[] = chatMessage
                     .split(";")
                     .map((user: string): string => user.trim())
                     .filter((user: string): boolean => user.length > 0);
+                this.logger.log(`WheelOfNames | Number of Users: ${users.length}`);
                 this.users.push(...users);
             } else {
                 return;
@@ -90,7 +95,7 @@ export class ApplicationAgraelusService implements OnModuleInit {
     };
 
     private reset(): void {
-        this.firstMessage = new Date(NaN);
+        this.lastMessage = new Date(NaN);
         this.numberOfUsers = 0;
         this.users = [];
     }
