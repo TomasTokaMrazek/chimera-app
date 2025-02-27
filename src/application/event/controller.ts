@@ -13,17 +13,17 @@ export class ApplicationEventController {
     ) {}
 
     @Post("enable")
-    public async enable(@Body() body: EventSyncRequestDto): Promise<void> {
+    async enable(@Body() body: EventSyncRequestDto): Promise<void> {
         await this.eventService.enable(body);
     }
 
     @Post("disable")
-    public async disable(@Body() body: EventSyncRequestDto): Promise<void> {
+    async disable(@Body() body: EventSyncRequestDto): Promise<void> {
         await this.eventService.disable(body);
     }
 
     @Get("get")
-    public async get(@Query() twitchAccountId: string): Promise<EventSynchronization[]> {
+    async get(@Query("twitchAccountId") twitchAccountId: string): Promise<EventSynchronization[]> {
         return await this.eventService.get(twitchAccountId);
     }
 

@@ -29,16 +29,17 @@ export class StreamLabsService {
 
     private readonly httpClients: Map<string, StreamLabsHttpClient> = new Map();
 
-    public async authorize(): Promise<URL> {
+    async authorize(scope: string): Promise<URL> {
+        const scopes: string = scope ?? "donations.read donations.create socket.token";
         const url: URL = new URL(streamLabsOauthUrl + "/authorize");
         url.searchParams.append("response_type", "code");
         url.searchParams.append("client_id", clientID);
         url.searchParams.append("redirect_uri", redirectUri);
-        url.searchParams.append("scope", "donations.read donations.create socket.token");
+        url.searchParams.append("scope", scopes);
         return url;
     }
 
-    public async oauthCallback(authorizationCode: string): Promise<void> {
+    async oauthCallback(authorizationCode: string): Promise<void> {
         const httpclientUnauthorized: StreamLabsHttpClient = StreamLabsHttpClient.createInstance(this.httpService, "");
         const oauthTokensResponse: AxiosResponse<HttpDto.TokenResponse> = await httpclientUnauthorized.getOauthTokens(authorizationCode);
         const accessToken: string = oauthTokensResponse.data.access_token ?? ((): string => {
@@ -68,7 +69,7 @@ export class StreamLabsService {
         await this.streamLabsRepository.updateTokens(streamLabsId.id, accessToken, refreshToken, socketToken);
     }
 
-    public async getHttpClient(id: number): Promise<StreamLabsHttpClient> {
+    async getHttpClient(id: number): Promise<StreamLabsHttpClient> {
         const streamLabs: StreamLabs = await this.streamLabsRepository.getById(id);
         const accountId: string = streamLabs.account_id ?? ((): string => {
             throw new Error(`StreamLabs Account ID for ID '${id}' does not exist.`);

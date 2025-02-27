@@ -10,7 +10,7 @@ export class StreamElementsController {
     ) {}
 
     @Get("authorize")
-    public async authorize(@Query() jwt: string): Promise<void> {
+    async authorize(@Query("jwt") jwt: string): Promise<void> {
         await this.streamElementsService.authorize(jwt);
     }
 

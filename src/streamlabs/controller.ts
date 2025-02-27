@@ -11,13 +11,13 @@ export class StreamLabsController {
 
     @Redirect()
     @Get("authorize")
-    public async authorize(): Promise<{ url: URL }> {
-        const url: URL = await this.streamLabsService.authorize();
+    async authorize(@Query("scope") scope: string): Promise<{ url: URL }> {
+        const url: URL = await this.streamLabsService.authorize(scope);
         return {url: url};
     }
 
     @Get("oauth/callback")
-    public async oauthCallback(@Query() code: string): Promise<void> {
+    public async oauthCallback(@Query("code") code: string): Promise<void> {
         await this.streamLabsService.oauthCallback(code);
     }
 

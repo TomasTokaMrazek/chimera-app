@@ -83,11 +83,12 @@ export class TwitchService implements OnModuleInit, OnModuleDestroy {
     }
 
     async authorize(scope: string): Promise<URL> {
+        const scopes: string = scope ?? "channel:read:redemptions channel:read:vips channel:read:subscriptions moderation:read moderator:read:followers moderator:read:chatters";
         const url: URL = new URL(twitchOauthUrl + "/authorize");
         url.searchParams.append("response_type", "code");
         url.searchParams.append("client_id", clientId);
         url.searchParams.append("redirect_uri", redirectUri);
-        url.searchParams.append("scope", scope);
+        url.searchParams.append("scope", scopes);
         return url;
     }
 
