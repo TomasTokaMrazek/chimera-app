@@ -37,6 +37,7 @@
       "@chimera/streamelements/*": ["./src/streamelements/*"],
       "@chimera/streamlabs/*": ["./src/streamlabs/*"],
       "@chimera/twitch/*": ["./src/twitch/*"],
+      "@chimera/utils/*": ["./src/utils/*"],
       "@chimera/wheelofnames/*": ["./src/wheelofnames/*"]
     },                                                   /* Specify a set of entries that re-map imports to additional lookup locations. */
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */

@@ -12,7 +12,8 @@ export function getEnvVariable(name: string): string {
 }
 
 interface ChatbotTwitch {
-    userAccountId: string;
+    accountId: string;
+    userAccountIds: string[];
     adminAccountIds: string[];
 }
 
@@ -43,12 +44,19 @@ interface Flygun {
     streamElements: FlygunStreamElements;
 }
 
+interface WheelOfNames {
+    url: string,
+    apiUrl: string;
+    apiKey: string;
+}
+
 interface App {
     url: string;
     port: number;
     chatbot: Chatbot;
     agraelus: Agraelus;
     flygun: Flygun;
+    wheelOfNames: WheelOfNames;
 }
 
 interface Twitch {
@@ -78,23 +86,17 @@ interface StreamLabs {
     clientSecret: string;
 }
 
-interface WheelOfNames {
-    url: string,
-    apiUrl: string;
-    apiKey: string;
-}
-
 interface Configuration {
     app: App;
     twitch: Twitch;
     streamElements: StreamElements;
     streamLabs: StreamLabs;
-    wheelOfNames: WheelOfNames;
 }
 
 const chatbot: Chatbot = {
     twitch: {
-        userAccountId: config.get("app.chatbot.twitch.userAccountId"),
+        accountId: config.get("app.chatbot.twitch.accountId"),
+        userAccountIds: config.get("app.chatbot.twitch.userAccountIds"),
         adminAccountIds: config.get("app.chatbot.twitch.adminAccountIds")
     }
 };
@@ -116,12 +118,19 @@ const flygun: Flygun = {
     }
 };
 
+const wheelOfNames: WheelOfNames = {
+    url: config.get("app.wheelOfNames.url"),
+    apiUrl: config.get("app.wheelOfNames.apiUrl"),
+    apiKey: getEnvVariable("WHEELOFNAMES_API_KEY")
+};
+
 const app: App = {
     url: config.get("app.url"),
     port: config.get("app.port"),
     chatbot: chatbot,
     agraelus: agraelus,
-    flygun: flygun
+    flygun: flygun,
+    wheelOfNames: wheelOfNames
 };
 
 const twitch: Twitch = {
@@ -152,18 +161,11 @@ const streamLabs: StreamLabs = {
     clientSecret: getEnvVariable("STREAMLABS_CLIENT_SECRET")
 };
 
-const wheelOfNames: WheelOfNames = {
-    url: config.get("wheelOfNames.url"),
-    apiUrl: config.get("wheelOfNames.apiUrl"),
-    apiKey: getEnvVariable("WHEELOFNAMES_API_KEY")
-};
-
 const configuration: Configuration = {
     app: app,
     twitch: twitch,
     streamElements: streamElements,
-    streamLabs: streamLabs,
-    wheelOfNames: wheelOfNames
+    streamLabs: streamLabs
 };
 
 export default configuration;

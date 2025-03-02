@@ -4,18 +4,19 @@ import {ScheduleModule} from "@nestjs/schedule";
 import {EventEmitterModule} from "@nestjs/event-emitter";
 import {APP_PIPE} from "@nestjs/core";
 
+import {Axios, AxiosResponse, InternalAxiosRequestConfig} from "axios";
 import {ZodValidationPipe} from "nestjs-zod";
 
 import {PrismaModule} from "@chimera/prisma/module";
 import {TwitchModule} from "@chimera/twitch/module";
 import {StreamElementsModule} from "@chimera/streamelements/module";
 import {StreamLabsModule} from "@chimera/streamlabs/module";
-import {ApplicationChatbotModule} from "@chimera/application/chatbot/module";
+import {ChatbotModule} from "@chimera/application/chatbot/module";
 import {ApplicationEventModule} from "@chimera/application/event/module";
-import {ApplicationAgraelusModule} from "@chimera/application/agraelus/module";
+import {AgraelusModule} from "@chimera/application/agraelus/module";
 import {ApplicationFlygunModule} from "@chimera/application/flygun/module";
-
-import {Axios, AxiosResponse, InternalAxiosRequestConfig} from "axios";
+import {CommandModule} from "@chimera/application/command/module";
+import {UtilsModule} from "@chimera/application/utils/module";
 
 @Module({
     imports: [
@@ -28,10 +29,12 @@ import {Axios, AxiosResponse, InternalAxiosRequestConfig} from "axios";
         TwitchModule,
         StreamElementsModule,
         StreamLabsModule,
-        ApplicationChatbotModule,
+        ChatbotModule,
         ApplicationEventModule,
-        ApplicationAgraelusModule,
-        ApplicationFlygunModule
+        AgraelusModule,
+        ApplicationFlygunModule,
+        CommandModule,
+        UtilsModule
     ],
     providers: [
         {

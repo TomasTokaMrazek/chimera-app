@@ -4,8 +4,17 @@
         "port": 3000,
         "chatbot": {
             "twitch": {
-                "userAccountId": "1119298268",
-                "adminAccountIds": ["69887790"]
+                "accountId": "1119298268",
+                "userAccountIds": [
+                    "1119298268", // ChimeraApp
+                    "69887790", // TokaTheFirst
+                    "36620767", // Agraelus
+                    "27122439", // FlyGunCZ
+                    "35669163" // Patrikturi
+                ],
+                "adminAccountIds": [
+                    "69887790" // TokaTheFirst
+                ]
             }
         },
         "agraelus": {
@@ -22,6 +31,10 @@
             "streamElements": {
                 "userAccountId": "5dfe32d7a8751704e1c47889"
             }
+        },
+        "wheelOfNames": {
+            "url": "https://wheelofnames.com",
+            "apiUrl": "https://wheelofnames.com/api/v1"
         }
     },
     "twitch": {
@@ -41,9 +54,5 @@
         "apiUrl": "https://streamlabs.com/api/v2.0",
         "websocketUrl": "https://sockets.streamlabs.com",
         "redirectUri": "https://chimera-app.tomastokamrazek.cz/streamlabs/oauth/callback"
-    },
-    "wheelOfNames": {
-        "url": "https://wheelofnames.com",
-        "apiUrl": "https://wheelofnames.com/api/v1"
     }
 }

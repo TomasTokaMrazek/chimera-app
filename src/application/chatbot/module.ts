@@ -1,15 +1,17 @@
 import {Module} from "@nestjs/common";
 import {HttpModule} from "@nestjs/axios";
 
-import {ApplicationChatbotController} from "@chimera/application/chatbot/controller";
-import {ApplicationChatbotService} from "@chimera/application/chatbot/service";
-
 import {TwitchModule} from "@chimera/twitch/module";
+import {CommandModule} from "@chimera/application/command/module";
+
+import {ChatbotController} from "@chimera/application/chatbot/controller";
+import {ChatbotService} from "@chimera/application/chatbot/service";
+import {AgraelusModule} from "@chimera/application/agraelus/module";
 
 @Module({
-    imports: [HttpModule, TwitchModule],
-    controllers: [ApplicationChatbotController],
-    providers: [ApplicationChatbotService],
-    exports: [ApplicationChatbotService]
+    imports: [HttpModule, AgraelusModule, CommandModule, TwitchModule],
+    controllers: [ChatbotController],
+    providers: [ChatbotService],
+    exports: [ChatbotService]
 })
-export class ApplicationChatbotModule {}
+export class ChatbotModule {}

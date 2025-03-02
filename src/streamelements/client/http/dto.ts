@@ -38,45 +38,42 @@ export interface TipListRequestParams {
 
 export interface TipListResponse {
     docs: TipListDoc[];
-    totalDocs?: number;
-    offset?: number;
-    limit?: number;
-    totalPages?: number;
-    page?: number;
-    pagingCounter?: number;
-    hasPrevPage?: boolean;
-    hasNextPage?: boolean;
-    prevPage?: number;
-    nextPage?: number;
+    totalDocs: number;
+    offset: number;
+    limit: number;
+    totalPages: number;
+    page: number;
+    pagingCounter: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+    prevPage: number;
+    nextPage: number;
 }
 
 export interface TipListDoc {
     donation: TipListDonation;
-    _id: number;
+    _id: string;
     channel?: string;
     provider?: string;
+    transactionId?: string;
     approved?: string;
     status?: string;
-    source?: string;
-    deleted?: string;
+    deleted?: boolean;
     createdAt?: string;
     updatedAt?: string;
-    transactionId?: string;
 }
 
 export interface TipListDonation {
     user: TipListDonationUser;
     message?: string;
-    amount?: number;
-    currency?: string;
-    paymentMethod?: string;
+    amount: number;
+    currency: string;
 }
 
 export interface TipListDonationUser {
-    username?: string;
+    username: string;
     geo?: string;
     email?: string;
-    channel?: string;
 }
 
 export interface BotCounterUpdateRequest {

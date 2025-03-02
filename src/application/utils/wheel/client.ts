@@ -7,8 +7,8 @@ import * as Dto from "./dto";
 
 import configuration from "@chimera/configuration";
 
-const wheelOfNamesApiUrl: string = configuration.wheelOfNames.apiUrl;
-const wheelOfNamesApiKey: string = configuration.wheelOfNames.apiKey;
+const wheelOfNamesApiUrl: string = configuration.app.wheelOfNames.apiUrl;
+const wheelOfNamesApiKey: string = configuration.app.wheelOfNames.apiKey;
 
 class WheelOfNamesHttpClient {
 

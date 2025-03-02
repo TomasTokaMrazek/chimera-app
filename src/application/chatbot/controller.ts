@@ -1,12 +1,12 @@
 import {Controller, Get, Redirect} from "@nestjs/common";
 
-import {ApplicationChatbotService} from "./service";
+import {ChatbotService} from "./service";
 
 @Controller("application/chatbot")
-export class ApplicationChatbotController {
+export class ChatbotController {
 
     constructor(
-        private readonly chatbotService: ApplicationChatbotService
+        private readonly chatbotService: ChatbotService
     ) {}
 
     @Redirect()

@@ -1,12 +1,12 @@
 import {Controller} from "@nestjs/common";
 
-import {ApplicationAgraelusService} from "./service";
+import {AgraelusService} from "./service";
 
 @Controller("application/agraelus")
-export class ApplicationAgraelusController {
+export class AgraelusController {
 
     constructor(
-        private readonly agraelusService: ApplicationAgraelusService
+        private readonly agraelusService: AgraelusService
     ) {}
 
 }
