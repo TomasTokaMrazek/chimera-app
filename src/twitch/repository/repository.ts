@@ -82,7 +82,7 @@ export class TwitchRepository {
             });
     }
 
-    public async updateTokens(accountId: string, accessToken: string, refreshToken: string | null): Promise<Twitch> {
+    public async updateTokens(accountId: string, accessToken: string, refreshToken: string | null, expiresIn: number | null, obtainmentTimestamp: number): Promise<Twitch> {
         return this.prisma.twitch
             .update({
                 where: {
@@ -90,7 +90,9 @@ export class TwitchRepository {
                 },
                 data: {
                     access_token: accessToken,
-                    refresh_token: refreshToken
+                    refresh_token: refreshToken,
+                    expires_in: expiresIn,
+                    obtainment_timestamp: obtainmentTimestamp
                 }
             });
     }

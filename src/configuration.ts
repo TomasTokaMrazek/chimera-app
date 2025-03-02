@@ -3,7 +3,7 @@ import config from "config";
 
 dotenv.config();
 
-function getEnvVariable(name: string): string {
+export function getEnvVariable(name: string): string {
     const value: string | undefined = process.env[name];
     if (value === undefined) {
         throw new Error(`Environment variable ${name} is undefined.`);

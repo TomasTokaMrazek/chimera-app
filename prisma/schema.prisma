@@ -22,11 +22,13 @@ model User {
 }
 
 model Twitch {
-  id            Int     @id @default(autoincrement())
-  account_id    String  @unique
-  user          User?
-  access_token  String?
-  refresh_token String?
+  id                   Int     @id @default(autoincrement())
+  account_id           String  @unique
+  user                 User?
+  access_token         String?
+  refresh_token        String?
+  expires_in           Int?
+  obtainment_timestamp BigInt?
 
   @@map("twitch")
 }

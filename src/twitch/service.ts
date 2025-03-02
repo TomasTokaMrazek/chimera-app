@@ -10,12 +10,15 @@ import {Twitch} from "@chimera/prisma/client";
 
 import {TwitchRepository} from "./repository/repository";
 
-import configuration from "@chimera/configuration";
+import configuration, {getEnvVariable} from "@chimera/configuration";
+import {WebhookClient} from "discord.js";
 
 const twitchOauthUrl: string = configuration.twitch.oauthUrl;
 const redirectUri: string = configuration.twitch.redirectUri;
 const clientId: string = configuration.twitch.clientId;
 const clientSecret: string = configuration.twitch.clientSecret;
+
+const discordWebhookUrl: string = getEnvVariable("DISCORD_NOTIFICATION_WEBHOOK_URL");
 
 @Injectable()
 export class TwitchService implements OnModuleInit, OnModuleDestroy {
@@ -71,8 +74,22 @@ export class TwitchService implements OnModuleInit, OnModuleDestroy {
     ) {}
 
     async onModuleInit(): Promise<any> {
+        const webhookClient = new WebhookClient({
+            url: discordWebhookUrl
+        });
+
         this.authProvider.onRefresh(async (accountId: string, token: AccessToken): Promise<any> => {
-            await this.twitchRepository.updateTokens(accountId, token.accessToken, token.refreshToken);
+            await webhookClient.send({
+                content: `Refresh token for account: ${accountId}.`
+            });
+            await this.twitchRepository.updateTokens(accountId, token.accessToken, token.refreshToken, token.expiresIn, token.obtainmentTimestamp);
+        });
+
+        this.authProvider.onRefreshFailure(async (accountId: string, error: Error): Promise<any> => {
+            await webhookClient.send({
+                content: `Refresh token failure for account: ${accountId}. Error: ${error.message}`
+            });
+            await this.authProvider.refreshAccessTokenForUser(accountId);
         });
 
         this.eventSubWsListener.start();
@@ -93,7 +110,9 @@ export class TwitchService implements OnModuleInit, OnModuleDestroy {
     }
 
     async oauthCallback(authorizationCode: string): Promise<void> {
-        await this.authProvider.addUserForCode(authorizationCode);
+        const accountId: string = await this.authProvider.addUserForCode(authorizationCode);
+        await this.twitchRepository.getOrInsertByAccountId(accountId);
+        await this.authProvider.refreshAccessTokenForUser(accountId);
     }
 
     async login(accountId: string): Promise<void> {
