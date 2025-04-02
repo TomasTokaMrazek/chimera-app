@@ -101,7 +101,7 @@ export class ApplicationAgraelusService implements OnModuleInit {
     }
 
     private async wheelOfNames(): Promise<string> {
-        const uniqueUsers: Array<string> = Array.from(new Set(this.users.filter((user: string): boolean => !/\W/.test(user))));
+        const uniqueUsers: Array<string> = Array.from(new Set(this.users.filter((user: string): boolean => /^(?!_)\w{3,25}$/.test(user))));
 
         const apiClient: ApiClient = await this.twitchService.getApiClient();
 
