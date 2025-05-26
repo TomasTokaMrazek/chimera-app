@@ -77,7 +77,9 @@ export class AgraelusService {
 
                 const apiClient: ApiClient = await this.twitchService.getApiClient();
 
-                const uniqueUsers: string[] = this.users.filter((user: string, index: number, self: string[]): boolean =>
+                const validUsers: string[] = this.users.filter((user: string): boolean => /^(?!_)\w{3,25}$/.test(user));
+
+                const uniqueUsers: string[] = validUsers.filter((user: string, index: number, self: string[]): boolean =>
                     self.findIndex((u: string): any => u === user) === index
                 );
 

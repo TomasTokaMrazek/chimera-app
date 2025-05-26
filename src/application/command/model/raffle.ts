@@ -173,7 +173,11 @@ export class RaffleService {
         if (twitchUser !== RaffleCommandOptionTwitchUser.enum.any) {
             const apiClient: ApiClient = await this.twitchService.getApiClient();
 
-            const userChunks: string[][] = chunkArray(users.map((user: RaffleUser): string => user.username), 100);
+            const validUsers: string[] = users
+                .map((user: RaffleUser): string => user.username)
+                .filter((user: string): boolean => /^(?!_)\w{3,25}$/.test(user));
+
+            const userChunks: string[][] = chunkArray(validUsers, 100);
             const helixUsers: HelixUser[] = [];
             for (const chunk of userChunks) {
                 const usersFromApi: HelixUser[] = await apiClient.users.getUsersByNames(chunk);
