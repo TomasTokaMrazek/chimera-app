@@ -34,10 +34,10 @@ export class ChatbotService implements OnModuleInit {
         userAccountId.forEach((userAccountId: string): void => {
             eventSubWsListener.onChannelChatMessage(userAccountId, accountId, async (event: EventSubChannelChatMessageEvent): Promise<void> => {
                 const message: string = event.messageText;
-                const broadcaster: HelixUser = await event.getBroadcaster();
-                const chatter: HelixUser = await event.getChatter();
+                const broadcasterId: string = event.broadcasterId;
+                const chatterId: string = event.chatterId
 
-                if (broadcaster.id === agraelusAccountId) {
+                if (chatterId === agraelusAccountId) {
                     await this.agraelusService.handleEvent(event);
                 }
 
@@ -45,16 +45,16 @@ export class ChatbotService implements OnModuleInit {
                     const twitchApiClient: ApiClient = await this.twitchService.getApiClient()
 
                     let isUserAllowed: boolean;
-                    if (chatter.id === broadcaster.id) {
+                    if (chatterId === broadcasterId) {
                         isUserAllowed = true;
-                    } else if (adminAccountIds.includes(chatter.id)) {
+                    } else if (adminAccountIds.includes(chatterId)) {
                         isUserAllowed = true;
                     } else {
-                        isUserAllowed = await twitchApiClient.moderation.checkUserMod(broadcaster, chatter);
+                        isUserAllowed = await twitchApiClient.moderation.checkUserMod(broadcasterId, chatterId);
                     }
 
                     if (isUserAllowed) {
-                        await this.commandService.executeCommand(message, broadcaster, chatter);
+                        await this.commandService.executeCommand(message, broadcasterId, chatterId);
                     }
                 }
             });

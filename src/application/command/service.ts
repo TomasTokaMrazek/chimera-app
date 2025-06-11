@@ -39,7 +39,14 @@ export class CommandService implements OnModuleInit {
         return message.startsWith("$");
     }
 
-    async executeCommand(message: string, broadcaster: HelixUser, chatter: HelixUser): Promise<void> {
+    async executeCommand(message: string, broadcasterId: string, chatterId: string): Promise<void> {
+        const twitchApiClient: ApiClient = await this.twitchService.getApiClient();
+        const broadcaster: HelixUser = await twitchApiClient.users.getUserByIdBatched(broadcasterId) ?? (() => {
+            throw new Error(`Twitch Account ID '${broadcasterId}' not found.`);
+        })();
+        const chatter: HelixUser = await twitchApiClient.users.getUserByIdBatched(chatterId) ?? (() => {
+            throw new Error(`Twitch Account ID '${chatterId}' not found.`);
+        })();
         try {
             const commandArguments: string[] = message.trim().split(/\s+/);
             this.program.parse(commandArguments, {from: "user"});
@@ -50,7 +57,7 @@ export class CommandService implements OnModuleInit {
                 const url: string = await this.raffleService.parse("27122439", args, options);
                 const apiClient: ApiClient = await this.twitchService.getApiClient();
                 await apiClient.asUser(chatbotAccountId, async (ctx: BaseApiClient): Promise<void> => {
-                    await ctx.chat.sendChatMessage(chatter.id, url);
+                    await ctx.chat.sendChatMessage(broadcaster, url);
                 });
             }
         } catch (error: any) {
@@ -60,12 +67,12 @@ export class CommandService implements OnModuleInit {
             } else if (error instanceof ZodError) {
                 const apiClient: ApiClient = await this.twitchService.getApiClient();
                 await apiClient.asUser(chatbotAccountId, async (ctx: BaseApiClient): Promise<void> => {
-                    await ctx.chat.sendChatMessage(chatter.id, `@${chatter.displayName} ${error.errors[0].message} for '${error.errors[0].path[0]}'.`);
+                    await ctx.chat.sendChatMessage(broadcaster, `@${chatter.displayName} ${error.errors[0].message} for '${error.errors[0].path[0]}'.`);
                 });
             } else {
                 const apiClient: ApiClient = await this.twitchService.getApiClient();
                 await apiClient.asUser(chatbotAccountId, async (ctx: BaseApiClient): Promise<void> => {
-                    await ctx.chat.sendChatMessage(chatter.id, "@TokaTheFirst Máš tam chybu. SUBprise");
+                    await ctx.chat.sendChatMessage(broadcaster, "@TokaTheFirst Máš tam chybu. SUBprise");
                 });
             }
         }

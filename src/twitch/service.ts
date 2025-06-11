@@ -57,6 +57,7 @@ export class TwitchService implements OnModuleInit, OnModuleDestroy {
 
     private readonly apiClient: ApiClient = new ApiClient({
         authProvider: this.authProvider,
+        batchDelay: 200,
         logger: {
             custom: this.twitchLogger
         }
