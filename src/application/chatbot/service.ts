@@ -37,7 +37,7 @@ export class ChatbotService implements OnModuleInit {
                 const broadcasterId: string = event.broadcasterId;
                 const chatterId: string = event.chatterId
 
-                if (chatterId === agraelusAccountId) {
+                if (broadcasterId === agraelusAccountId) {
                     await this.agraelusService.handleEvent(event);
                 }
 
