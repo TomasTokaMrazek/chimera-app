@@ -44,7 +44,7 @@ export class WheelService {
                 isAdvanced: true,
                 customPictureDataUri: profilePictureUrl,
                 pictureType: Wheel.PictureType.UPLOADED,
-                allowDuplicates: false
+                allowDuplicates: true
             },
             shareMode: Wheel.ShareMode.COPYABLE
         };

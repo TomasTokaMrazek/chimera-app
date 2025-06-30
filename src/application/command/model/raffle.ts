@@ -5,7 +5,7 @@ import {AxiosResponse} from "axios";
 import {ApiClient, HelixUser} from "@twurple/api";
 import {chunkArray} from "@chimera/utils/array";
 import {Injectable, Logger} from "@nestjs/common";
-import {Command} from "@commander-js/extra-typings";
+import {Command, OptionValues} from "@commander-js/extra-typings";
 import {TwitchService} from "@chimera/twitch/service";
 import {CurrencyService} from "@chimera/application/utils/currency/service";
 import {StreamElementsService} from "@chimera/streamelements/service";
@@ -15,7 +15,7 @@ import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {UserView} from "@chimera/twitch/repository/views";
 import {StreamElements} from "@chimera/prisma/client";
 import {CommanderError} from "commander";
-import {z} from "zod";
+import {z} from "zod/v4";
 
 export const RaffleCommandOptions = z.object({
     donation: z.array(z.string()).optional(),
@@ -25,8 +25,8 @@ export const RaffleCommandOptions = z.object({
 export type RaffleCommandOptionsType = z.infer<typeof RaffleCommandOptions>;
 
 export const RaffleCommandOptionDonation = z.object({
-    start: z.string().datetime({offset: true, local: true}).optional(),
-    end: z.string().datetime({offset: true, local: true}).optional(),
+    start: z.iso.datetime({offset: true, local: true}).optional(),
+    end: z.iso.datetime({offset: true, local: true}).optional(),
     min: z.coerce.number().nonnegative().optional()
 });
 export type RaffleCommandOptionDonationType = z.infer<typeof RaffleCommandOptionDonation>;
@@ -47,6 +47,10 @@ export type RaffleCommandOptionTwitchType = z.infer<typeof RaffleCommandOptionTw
 export interface RaffleUser {
     username: string;
     color: string | null;
+}
+
+export interface CommandModule {
+
 }
 
 @Injectable()
@@ -75,7 +79,7 @@ export class RaffleService {
             });
     }
 
-    async parse(accountId: string, args: string[], commandOptions: RaffleCommandOptionsType): Promise<string> {
+    async parse(accountId: string, args: string[], commandOptions: OptionValues): Promise<string> {
         let users: RaffleUser[] = [];
 
         const options: RaffleCommandOptionsType = RaffleCommandOptions.parse(commandOptions);
