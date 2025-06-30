@@ -205,8 +205,12 @@ export class RewardService {
         }
 
         // 4) bulk-fetch HelixUser for each unique userId
-        const userIds: string[] = Array.from(userRedemptions.keys());
-        const helixUsers: HelixUser[] = await apiClient.users.getUsersByIds(userIds);
+        const userIdChunks: string[][] = chunkArray(Array.from(userRedemptions.keys()), 100);
+        const helixUsers: HelixUser[] = [];
+        for (const chunk of userIdChunks) {
+            const usersFromApi: HelixUser[] = await apiClient.users.getUsersByIds(chunk);
+            helixUsers.push(...usersFromApi);
+        }
 
         // 5) run filter once per user
         const passesMap = new Map<string, boolean>();
