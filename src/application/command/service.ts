@@ -66,7 +66,7 @@ export class CommandService implements OnModuleInit {
                 case "reward": {
                     this.logger.log("SWITCH REWARD");
                     const commandOptions: RewardCommandOptionsType = RewardCommandOptions.parse(args);
-                    const message: string = await this.rewardService.execute("35669163", commandOptions);
+                    const message: string = await this.rewardService.execute(broadcasterId, commandOptions);
                     const reply = `@${chatter.displayName} ${message}`;
                     await twitchApiClient.asUser(chatbotAccountId, async (ctx: BaseApiClient): Promise<void> => {
                         await ctx.chat.sendChatMessage(broadcaster, reply);
