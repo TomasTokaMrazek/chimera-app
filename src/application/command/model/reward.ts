@@ -122,8 +122,6 @@ export class RewardService {
         const optionTarget: RewardCommandOptionTargetType = options.target;
         this.logger.log(optionTarget);
 
-        await this.twitchService.login(broadcasterId);
-
         const apiClient: ApiClient = await this.twitchService.getApiClient();
         const broadcaster: HelixUser = await apiClient.users.getUserById(broadcasterId) ?? ((): HelixUser => {
             throw new Error(`Twitch Account broadcasterId '${broadcasterId}' not found.`);
