@@ -1,4 +1,4 @@
-import {ApiClient, HelixChannel, HelixCustomRewardRedemption, HelixUser} from "@twurple/api";
+import {ApiClient, HelixCustomReward, HelixCustomRewardRedemption, HelixUser} from "@twurple/api";
 import {chunkArray} from "@chimera/utils/array";
 import {Injectable, Logger} from "@nestjs/common";
 import {TwitchService} from "@chimera/twitch/service";
@@ -7,6 +7,7 @@ import {z} from "zod/v4";
 import {Argv, CommandModule} from "yargs";
 
 export const RewardCommandArgumentOperation = z.enum([
+    "create",
     "draw",
     "close"
 ]);
@@ -30,13 +31,36 @@ export const RewardCommandOptionTwitch = z.object({
 });
 export type RewardCommandOptionTwitchType = z.infer<typeof RewardCommandOptionTwitch>;
 
-export const RewardCommandOptions = z.object({
-    operation: RewardCommandArgumentOperation,
+export const RewardCommandCreateOptions = z.object({
+    operation: z.literal(RewardCommandArgumentOperation.enum.create),
+    title: z.string(),
+    prompt: z.string(),
+    cost: z.number().int()
+});
+export type RewardCommandCreateOptionsType = z.infer<typeof RewardCommandCreateOptions>;
+
+export const RewardCommandDrawOptions = z.object({
+    operation: z.literal(RewardCommandArgumentOperation.enum.draw),
     id: z.uuid(),
     twitch: RewardCommandOptionTwitch,
     unique: z.boolean(),
     target: RewardCommandOptionTarget
 });
+export type RewardCommandDrawOptionsType = z.infer<typeof RewardCommandDrawOptions>;
+
+export const RewardCommandCloseOptions = z.object({
+    operation: z.literal(RewardCommandArgumentOperation.enum.close),
+    id: z.uuid(),
+    twitch: RewardCommandOptionTwitch,
+    unique: z.boolean()
+});
+export type RewardCommandCloseOptionsType = z.infer<typeof RewardCommandCloseOptions>;
+
+export const RewardCommandOptions = z.discriminatedUnion("operation", [
+    RewardCommandCreateOptions,
+    RewardCommandDrawOptions,
+    RewardCommandCloseOptions,
+]);
 export type RewardCommandOptionsType = z.infer<typeof RewardCommandOptions>;
 
 export interface RewardUser {
@@ -67,8 +91,19 @@ export class RewardService {
                     })
                     .option("id", {
                         type: "string",
-                        demandOption: true,
                         describe: "Custom Reward UUID"
+                    })
+                    .option("title", {
+                        type: "string",
+                        describe: "Custom Reward Title"
+                    })
+                    .option("prompt", {
+                        type: "string",
+                        describe: "Custom Reward Prompt"
+                    })
+                    .option("cost", {
+                        type: "number",
+                        describe: "Redemption cost"
                     })
                     .option("twitch", {
                         type: "array",
@@ -86,41 +121,23 @@ export class RewardService {
                     })
                     .option("unique", {
                         type: "boolean",
-                        default: true,
                         describe: "Unique usernames"
                     })
                     .option("target", {
                         choices: RewardCommandOptionTarget.options,
-                        default: RewardCommandOptionTarget.enum.wheel,
                         describe: "Draw target"
                     }),
             handler: (argv: RewardCommandOptionsType): void => {
-                this.logger.log("RUN REWARD");
-                this.logger.log(`id: ${argv.id}, target: ${argv.target}`);
                 this.logger.log(`argv: ${JSON.stringify(argv)}`);
             }
         };
     }
 
     async execute(broadcasterId: string, options: RewardCommandOptionsType): Promise<string> {
-        this.logger.log("EXECUTE REWARD");
-
         this.logger.log(options);
 
-        const optionOperation: string = options.operation;
+        const optionOperation = options.operation;
         this.logger.log(optionOperation);
-
-        const optionId: string = options.id;
-        this.logger.log(optionId);
-
-        const optionTwitch: RewardCommandOptionTwitchType = options.twitch;
-        this.logger.log(optionTwitch);
-
-        const optionUnique: boolean = options.unique;
-        this.logger.log(optionUnique);
-
-        const optionTarget: RewardCommandOptionTargetType = options.target;
-        this.logger.log(optionTarget);
 
         await this.twitchService.login(broadcasterId);
 
@@ -130,10 +147,43 @@ export class RewardService {
         })();
 
         switch (optionOperation) {
-            case "draw": {
+            case RewardCommandArgumentOperation.enum.create: {
+                const optionTitle: string = options.title;
+                this.logger.log(optionTitle);
+
+                const optionPrompt: string = options.prompt;
+                this.logger.log(optionPrompt);
+
+                const optionCost: number = options.cost;
+                this.logger.log(optionCost);
+
+                return await this.create(broadcaster, optionTitle, optionPrompt, optionCost);
+            }
+            case RewardCommandArgumentOperation.enum.draw: {
+                const optionId: string = options.id;
+                this.logger.log(optionId);
+
+                const optionTwitch: RewardCommandOptionTwitchType = options.twitch;
+                this.logger.log(optionTwitch);
+
+                const optionUnique: boolean = options.unique;
+                this.logger.log(optionUnique);
+
+                const optionTarget: RewardCommandOptionTargetType = options.target;
+                this.logger.log(optionTarget);
+
                 return await this.draw(broadcaster, optionId, optionTwitch, optionUnique, optionTarget);
             }
-            case "close": {
+            case RewardCommandArgumentOperation.enum.close: {
+                const optionId: string = options.id;
+                this.logger.log(optionId);
+
+                const optionTwitch: RewardCommandOptionTwitchType = options.twitch;
+                this.logger.log(optionTwitch);
+
+                const optionUnique: boolean = options.unique;
+                this.logger.log(optionUnique);
+
                 return await this.close(broadcaster, optionId, optionTwitch, optionUnique);
             }
             default: {
@@ -143,12 +193,27 @@ export class RewardService {
 
     }
 
+    async create(broadcaster: HelixUser, rewardTitle: string, rewardPrompt: string, redemptionCost: number): Promise<string> {
+        const apiClient: ApiClient = await this.twitchService.getApiClient();
+
+        const reward: HelixCustomReward = await apiClient.channelPoints.createCustomReward(broadcaster, {
+            title: rewardTitle,
+            prompt: rewardPrompt,
+            cost: redemptionCost,
+            maxRedemptionsPerUserPerStream: 1
+        })
+
+        return `Reward created with id '${reward.id}'.`;
+    }
+
     async draw(broadcaster: HelixUser, rewardId: string, twitch: RewardCommandOptionTwitchType, unique: boolean, target: RewardCommandOptionTargetType): Promise<string> {
         const apiClient: ApiClient = await this.twitchService.getApiClient();
 
-        await apiClient.channelPoints.updateCustomReward(broadcaster, rewardId, {isPaused: true});
+        const reward: HelixCustomReward = await apiClient.channelPoints.updateCustomReward(broadcaster, rewardId, {
+            isPaused: true
+        });
 
-        const redemptions: HelixCustomRewardRedemption[] = await apiClient.channelPoints.getRedemptionsForBroadcasterPaginated(broadcaster, rewardId, "UNFULFILLED", {}).getAll();
+        const redemptions: HelixCustomRewardRedemption[] = await apiClient.channelPoints.getRedemptionsForBroadcasterPaginated(broadcaster, reward.id, "UNFULFILLED", {}).getAll();
 
         let users: RewardUser[] = redemptions.map((redemption: HelixCustomRewardRedemption): RewardUser => ({
             username: redemption.userDisplayName,
@@ -191,10 +256,12 @@ export class RewardService {
         const apiClient: ApiClient = await this.twitchService.getApiClient();
 
         // 1) disable the reward
-        await apiClient.channelPoints.updateCustomReward(broadcaster, rewardId, {isEnabled: false});
+        const reward: HelixCustomReward = await apiClient.channelPoints.updateCustomReward(broadcaster, rewardId, {
+            isEnabled: false
+        });
 
         // 2) fetch all UNFULFILLED redemptions
-        const redemptions: HelixCustomRewardRedemption[] = await apiClient.channelPoints.getRedemptionsForBroadcasterPaginated(broadcaster, rewardId, "UNFULFILLED", {}).getAll();
+        const redemptions: HelixCustomRewardRedemption[] = await apiClient.channelPoints.getRedemptionsForBroadcasterPaginated(broadcaster, reward.id, "UNFULFILLED", {}).getAll();
 
         // 3) group redemptions by userId
         const userRedemptions = new Map<string, HelixCustomRewardRedemption[]>();

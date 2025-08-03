@@ -3,7 +3,7 @@ import {Injectable, Logger, OnModuleInit} from "@nestjs/common";
 import {EventSubWsListener} from "@twurple/eventsub-ws";
 import {EventSubChannelChatMessageEvent} from "@twurple/eventsub-base/lib/events/EventSubChannelChatMessageEvent";
 
-import {ApiClient, HelixUser} from "@twurple/api";
+import {ApiClient} from "@twurple/api";
 import {CommandService} from "@chimera/application/command/service";
 import {AgraelusService} from "@chimera/application/agraelus/service";
 import {TwitchService} from "@chimera/twitch/service";

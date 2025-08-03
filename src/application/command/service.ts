@@ -57,14 +57,10 @@ export class CommandService implements OnModuleInit {
             throw new Error(`Twitch Account ID '${chatterId}' not found.`);
         })();
         try {
-
-            this.logger.log("STEP 1");
-
             const args: ArgumentsCamelCase = await this.parser.parseAsync(message.replace(/^\$\s*/, ""));
-            this.logger.log(`argv: ${JSON.stringify(args)}`)
+            this.logger.log(`argv: ${JSON.stringify(args)}`);
             switch (args._[0]) {
                 case "reward": {
-                    this.logger.log("SWITCH REWARD");
                     const commandOptions: RewardCommandOptionsType = RewardCommandOptions.parse(args);
                     const message: string = await this.rewardService.execute(broadcasterId, commandOptions);
                     const reply = `@${chatter.displayName} ${message}`;
@@ -74,13 +70,11 @@ export class CommandService implements OnModuleInit {
                     break;
                 }
             }
-
-            this.logger.log("STEP 2");
         } catch (error: any) {
             this.logger.error(error);
             if (error instanceof CommanderError && error.code === "commander.unknownCommand") {
                 return;
-            } else if (error instanceof CommanderError || error.name === 'YError') {
+            } else if (error instanceof CommanderError || error.name === "YError") {
                 const apiClient: ApiClient = await this.twitchService.getApiClient();
                 await apiClient.asUser(chatbotAccountId, async (ctx: BaseApiClient): Promise<void> => {
                     await ctx.chat.sendChatMessage(broadcaster, `@${chatter.displayName} ${error.message}.`);
@@ -89,7 +83,7 @@ export class CommandService implements OnModuleInit {
                 const apiClient: ApiClient = await this.twitchService.getApiClient();
                 await apiClient.asUser(chatbotAccountId, async (ctx: BaseApiClient): Promise<void> => {
                     const first: $ZodIssue = error.issues[0];
-                    const fieldPath: string = first.path.map((segment: PropertyKey): string => String(segment)).join('.');
+                    const fieldPath: string = first.path.map((segment: PropertyKey): string => String(segment)).join(".");
                     const message: string = first.message;
                     const reply = `@${chatter.displayName} ${message} for '${fieldPath}'.`;
                     await ctx.chat.sendChatMessage(broadcaster, reply);
