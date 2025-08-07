@@ -5,6 +5,7 @@ import {TwitchService} from "@chimera/twitch/service";
 import {WheelService} from "@chimera/application/utils/wheel/service";
 import {z} from "zod";
 import {Argv, CommandModule} from "yargs";
+import {RaffleCommandOptionTarget} from "@chimera/application/command/model/raffle";
 
 export const RewardCommandArgumentOperation = z.enum([
     "create",
@@ -43,8 +44,8 @@ export const RewardCommandDrawOptions = z.object({
     operation: z.literal(RewardCommandArgumentOperation.enum.draw),
     id: z.uuid(),
     twitch: RewardCommandOptionTwitch,
-    unique: z.boolean(),
-    target: RewardCommandOptionTarget
+    unique: z.boolean().optional().default(true),
+    target: RaffleCommandOptionTarget.optional().default(RaffleCommandOptionTarget.enum.wheel)
 });
 export type RewardCommandDrawOptionsType = z.infer<typeof RewardCommandDrawOptions>;
 
@@ -52,7 +53,7 @@ export const RewardCommandCloseOptions = z.object({
     operation: z.literal(RewardCommandArgumentOperation.enum.close),
     id: z.uuid(),
     twitch: RewardCommandOptionTwitch,
-    unique: z.boolean()
+    unique: z.boolean().optional().default(true),
 });
 export type RewardCommandCloseOptionsType = z.infer<typeof RewardCommandCloseOptions>;
 
