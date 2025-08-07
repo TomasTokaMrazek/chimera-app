@@ -5,7 +5,6 @@ import {AxiosResponse} from "axios";
 import {ApiClient, HelixUser} from "@twurple/api";
 import {chunkArray} from "@chimera/utils/array";
 import {Injectable, Logger} from "@nestjs/common";
-import {Command, OptionValues} from "@commander-js/extra-typings";
 import {TwitchService} from "@chimera/twitch/service";
 import {CurrencyService} from "@chimera/application/utils/currency/service";
 import {StreamElementsService} from "@chimera/streamelements/service";
@@ -14,25 +13,23 @@ import {StreamElementsRepository} from "@chimera/streamelements/repository/repos
 import {TwitchRepository} from "@chimera/twitch/repository/repository";
 import {UserView} from "@chimera/twitch/repository/views";
 import {StreamElements} from "@chimera/prisma/client";
-import {CommanderError} from "commander";
-import {z} from "zod/v4";
+import {z} from "zod";
+import {Argv, CommandModule} from "yargs";
+import {RewardCommandOptionTwitchUser, RewardUser} from "@chimera/application/command/model/reward";
 
-export const RaffleCommandOptions = z.object({
-    donation: z.array(z.string()).optional(),
-    twitch: z.array(z.string()).optional(),
-    unique: z.boolean().optional()
-});
-export type RaffleCommandOptionsType = z.infer<typeof RaffleCommandOptions>;
+export const RaffleCommandArgumentOperation = z.enum([
+    "draw"
+]);
+export type RaffleCommandArgumentOperationType = z.infer<typeof RaffleCommandArgumentOperation>;
 
 export const RaffleCommandOptionDonation = z.object({
-    start: z.iso.datetime({offset: true, local: true}).optional(),
-    end: z.iso.datetime({offset: true, local: true}).optional(),
-    min: z.coerce.number().nonnegative().optional()
+    start: z.iso.datetime({offset: true, local: true}).optional().default(() => subHours(new Date(), 16).toISOString()),
+    end: z.iso.datetime({offset: true, local: true}).optional().default(() => new Date().toISOString()),
+    min: z.coerce.number().nonnegative().optional().default(0)
 });
 export type RaffleCommandOptionDonationType = z.infer<typeof RaffleCommandOptionDonation>;
 
 export const RaffleCommandOptionTwitchUser = z.enum([
-    "any",
     "exists",
     "follower",
     "subscriber"
@@ -40,18 +37,35 @@ export const RaffleCommandOptionTwitchUser = z.enum([
 export type RaffleCommandOptionTwitchUserType = z.infer<typeof RaffleCommandOptionTwitchUser>;
 
 export const RaffleCommandOptionTwitch = z.object({
-    user: RaffleCommandOptionTwitchUser.optional()
+    user: RaffleCommandOptionTwitchUser.optional().default(RaffleCommandOptionTwitchUser.enum.exists)
 });
 export type RaffleCommandOptionTwitchType = z.infer<typeof RaffleCommandOptionTwitch>;
+
+export const RaffleCommandOptionTarget = z.enum([
+    "wheel",
+    "pastebin"
+]);
+export type RaffleCommandOptionTargetType = z.infer<typeof RaffleCommandOptionTarget>;
+
+export const RaffleCommandDrawOptions = z.object({
+    operation: z.literal(RaffleCommandArgumentOperation.enum.draw),
+    donation: RaffleCommandOptionDonation.optional(),
+    twitch: RaffleCommandOptionTwitch.optional(),
+    unique: z.boolean().optional().default(true),
+    target: RaffleCommandOptionTarget.optional().default(RaffleCommandOptionTarget.enum.wheel)
+});
+export type RaffleCommandDrawOptionsType = z.infer<typeof RaffleCommandDrawOptions>;
+
+export const RaffleCommandOptions = z.discriminatedUnion("operation", [
+    RaffleCommandDrawOptions
+]);
+export type RaffleCommandOptionsType = z.infer<typeof RaffleCommandOptions>;
 
 export interface RaffleUser {
     username: string;
     color: string | null;
 }
 
-export interface CommandModule {
-
-}
 
 @Injectable()
 export class RaffleService {
@@ -67,46 +81,105 @@ export class RaffleService {
         private readonly streamElementRepository: StreamElementsRepository
     ) {}
 
-    async getCommand(): Promise<Command<any, any>> {
-        return new Command("$raffle")
-            .argument("[target]", "target (wheel, pastebin)")
-            .option("--donation <options...>", "donation options (start, end, min)")
-            .option("--twitch <options...>", "twitch options (user)")
-            .option("--unique", "unique usernames")
-            .option("--no-unique", "no unique usernames")
-            .exitOverride((error: CommanderError) => {
-                throw error;
-            });
+    getCommand(): CommandModule<any, RaffleCommandOptionsType> {
+        return {
+            command: "raffle <operation>",
+            describe: "raffle command",
+            builder: (yargs: Argv<any>): Argv<any> =>
+                yargs
+                    .positional("operation", {
+                        choices: RaffleCommandArgumentOperation.options,
+                        demandOption: true,
+                        describe: "operation"
+                    })
+                    .option("donation", {
+                        type: "array",
+                        describe: "Donation options (start, end, min)",
+                        coerce: (option: string[]): Record<string, string> => {
+                            const result: Record<string, string> = {};
+                            for (const part of option) {
+                                const [key, value] = part.split("=");
+                                if (key && value) {
+                                    result[key] = value;
+                                }
+                            }
+                            return result;
+                        }
+                    })
+                    .option("twitch", {
+                        type: "array",
+                        describe: "Twitch Options (user)",
+                        coerce: (option: string[]): Record<string, string> => {
+                            const result: Record<string, string> = {};
+                            for (const part of option) {
+                                const [key, value] = part.split("=");
+                                if (key && value) {
+                                    result[key] = value;
+                                }
+                            }
+                            return result;
+                        }
+                    })
+                    .option("unique", {
+                        type: "boolean",
+                        describe: "Unique usernames"
+                    })
+                    .option("target", {
+                        choices: RaffleCommandOptionTarget.options,
+                        describe: "Draw target"
+                    }),
+            handler: (argv: RaffleCommandOptionsType): void => {
+                this.logger.log(`argv: ${JSON.stringify(argv)}`);
+            }
+        };
     }
 
-    async parse(accountId: string, args: string[], commandOptions: OptionValues): Promise<string> {
-        let users: RaffleUser[] = [];
-
-        const options: RaffleCommandOptionsType = RaffleCommandOptions.parse(commandOptions);
+    async execute(broadcasterId: string, options: RaffleCommandOptionsType): Promise<string> {
         this.logger.log(options);
 
-        const optionsDonation: Record<string, string> = {};
-        options.donation?.forEach((option: string): void => {
-            const [key, value] = option.split("=");
-            if (key && value) {
-                optionsDonation[key] = value;
+        const optionOperation = options.operation;
+        this.logger.log(optionOperation);
+
+        const apiClient: ApiClient = await this.twitchService.getApiClient();
+        const broadcaster: HelixUser = await apiClient.users.getUserById(broadcasterId) ?? ((): HelixUser => {
+            throw new Error(`Twitch Account broadcasterId '${broadcasterId}' not found.`);
+        })();
+
+        switch (optionOperation) {
+            case RaffleCommandArgumentOperation.enum.draw: {
+                const optionDonation = options.donation;
+                this.logger.log(optionDonation);
+
+                const optionTwitch = options.twitch;
+                this.logger.log(optionTwitch);
+
+                const optionUnique = options.unique;
+                this.logger.log(optionUnique);
+
+                const optionTarget = options.target;
+                this.logger.log(optionTarget);
+
+                return await this.draw(broadcaster, optionDonation, optionTwitch, optionUnique, optionTarget);
             }
-        });
-        this.logger.log(optionsDonation);
+            default: {
+                throw new Error();
+            }
+        }
+    }
 
-        const donation: RaffleCommandOptionDonationType = RaffleCommandOptionDonation.parse(optionsDonation);
-        this.logger.log(donation);
+    async draw(broadcaster: HelixUser, donation: RaffleCommandOptionDonationType | undefined, twitch: RaffleCommandOptionTwitchType | undefined, unique: boolean, target: RaffleCommandOptionTargetType): Promise<string> {
+        let users: RaffleUser[] = [];
 
-        const start: number = donation?.start ? getTime(parseISO(donation.start)) : getTime(subHours(new Date(), 16));
-        this.logger.log(start);
-
-        const end: number = donation?.end ? getTime(parseISO(donation.end)) : getTime(new Date());
-        this.logger.log(end);
-
-        const min: number = donation?.min ?? 0;
-        this.logger.log(min);
         if (donation) {
-            const user: UserView = await this.twitchRepository.getUserByAccountId(accountId);
+            const start: number = getTime(parseISO(donation.start));
+            this.logger.log(start);
+
+            const end: number = getTime(parseISO(donation.end));
+            this.logger.log(end);
+
+            const min: number = donation.min;
+            this.logger.log(min);
+            const user: UserView = await this.twitchRepository.getUserByAccountId(broadcaster.id);
             if (user.user?.streamelements_id) {
                 const streamElementsId: number = user.user.streamelements_id;
                 const streamElements: StreamElements = await this.streamElementRepository.getById(streamElementsId);
@@ -121,46 +194,26 @@ export class RaffleService {
             }
         }
 
-        const unique: boolean = options.unique ?? true;
-        this.logger.log(unique);
+        if (twitch) {
+            users = await this.twitch(broadcaster, users, twitch.user);
+        }
+
         if (unique) {
-            users = users.filter((user: RaffleUser, index: number, self: RaffleUser[]): boolean =>
-                self.findIndex((u: RaffleUser): any => u.username === user.username) === index
+            users = users.filter((user: RewardUser, index: number, self: RewardUser[]): boolean =>
+                self.findIndex((u: RewardUser): any => u.username === user.username) === index
             );
         }
 
-        const optionsTwitch: Record<string, string> = {};
-        options.twitch?.forEach((option: string): void => {
-            const [key, value] = option.split("=");
-            if (key && value) {
-                optionsTwitch[key] = value;
-            }
-        });
-        this.logger.log(optionsTwitch);
-
-        const twitch: RaffleCommandOptionTwitchType = RaffleCommandOptionTwitch.parse(optionsTwitch);
-        this.logger.log(twitch);
-
-        if (twitch) {
-            const twitchUser: RaffleCommandOptionTwitchUserType = twitch.user ?? RaffleCommandOptionTwitchUser.enum.any;
-            users = await this.twitch(accountId, users, twitchUser);
-        }
-
-        const target: string = args[0] ?? "wheel";
-        this.logger.log("Target:", target);
-
+        let url: string;
         switch (target) {
             case "wheel": {
-                const apiClient: ApiClient = await this.twitchService.getApiClient();
-                const user: HelixUser = await apiClient.users.getUserById(accountId) ?? ((): HelixUser => {
-                    throw new Error(`Twitch Account ID '${accountId}' not found.`);
-                })();
-                const displayName: string = user.displayName;
-                const profilePictureUrl: string = user.profilePictureUrl;
+                const displayName: string = broadcaster.displayName;
+                const profilePictureUrl: string = broadcaster.profilePictureUrl;
 
                 this.logger.log(`ProfilePictureUrl: ${profilePictureUrl}`);
 
-                return await this.wheelService.generate(displayName, profilePictureUrl, users);
+                url = await this.wheelService.generate(displayName, profilePictureUrl, users);
+                break;
             }
             case "pastebin": {
                 throw new Error();
@@ -169,67 +222,71 @@ export class RaffleService {
                 throw new Error();
             }
         }
+
+        return `Reward draw at ${url} with ${users.length} redemptions.`;
     }
 
-    async twitch(accountId: string, users: RaffleUser[], twitchUser: RaffleCommandOptionTwitchUserType): Promise<RaffleUser[]> {
+    async twitch(broadcaster: HelixUser, users: RaffleUser[], twitchUser: RaffleCommandOptionTwitchUserType): Promise<RaffleUser[]> {
         const filteredUsers: RaffleUser[] = [];
 
-        if (twitchUser !== RaffleCommandOptionTwitchUser.enum.any) {
-            const apiClient: ApiClient = await this.twitchService.getApiClient();
+        await this.twitchService.login(broadcaster.id);
+        const apiClient: ApiClient = await this.twitchService.getApiClient();
 
-            const validUsers: string[] = users
-                .map((user: RaffleUser): string => user.username)
-                .filter((user: string): boolean => /^(?!_)\w{3,25}$/.test(user));
+        const validUsers: string[] = users
+            .map((user: RaffleUser): string => user.username)
+            .filter((user: string): boolean => /^(?!_)\w{3,25}$/.test(user));
 
-            const userChunks: string[][] = chunkArray(validUsers, 100);
-            const helixUsers: HelixUser[] = [];
-            for (const chunk of userChunks) {
-                const usersFromApi: HelixUser[] = await apiClient.users.getUsersByNames(chunk);
-                helixUsers.push(...usersFromApi);
+        const userChunks: string[][] = chunkArray(validUsers, 100);
+        const helixUsers: HelixUser[] = [];
+        for (const chunk of userChunks) {
+            const usersFromApi: HelixUser[] = await apiClient.users.getUsersByNames(chunk);
+            helixUsers.push(...usersFromApi);
+        }
+
+        const helixUserChunks: HelixUser[][] = chunkArray(helixUsers, 100);
+        const helixUserColors: Map<string, string | null> = new Map();
+        for (const chunk of helixUserChunks) {
+            const colorsFromApi: Map<string, string | null> = await apiClient.chat.getColorsForUsers(chunk);
+            colorsFromApi.forEach((value: string | null, key: string): void => {
+                helixUserColors.set(key, value);
+            });
+        }
+
+        const passEntries: Array<[HelixUser, Promise<boolean>]> = [];
+        for (const validUser of validUsers) {
+            const helixUser: HelixUser | undefined = helixUsers.find((user: HelixUser): boolean => user.displayName === validUser);
+            if (!helixUser) {
+                continue;
             }
 
-            const helixUserChunks: HelixUser[][] = chunkArray(helixUsers, 100);
-            const helixUserColors: Map<string, string | null> = new Map();
-            for (const chunk of helixUserChunks) {
-                const colorsFromApi: Map<string, string | null> = await apiClient.chat.getColorsForUsers(chunk);
-                colorsFromApi.forEach((value: string | null, key: string): void => {
-                    helixUserColors.set(key, value);
-                });
-            }
-
-            for (const helixUser of helixUsers) {
-                switch (twitchUser) {
-                    case RaffleCommandOptionTwitchUser.enum.exists: {
-                        filteredUsers.push({
-                            username: helixUser.displayName,
-                            color: helixUserColors.get(helixUser.id) ?? null
-                        });
-                        break;
-                    }
-                    case RaffleCommandOptionTwitchUser.enum.follower: {
-                        const isFollower: boolean = await helixUser.follows(accountId);
-                        if (isFollower) {
-                            filteredUsers.push({
-                                username: helixUser.displayName,
-                                color: helixUserColors.get(helixUser.id) ?? null
-                            });
-                        }
-                        break;
-                    }
-                    case RaffleCommandOptionTwitchUser.enum.subscriber: {
-                        const isSubscriber: boolean = await helixUser.isSubscribedTo(accountId);
-                        if (isSubscriber) {
-                            filteredUsers.push({
-                                username: helixUser.displayName,
-                                color: helixUserColors.get(helixUser.id) ?? null
-                            });
-                        }
-                        break;
-                    }
+            let passPromise: Promise<boolean>;
+            switch (twitchUser) {
+                case RewardCommandOptionTwitchUser.enum.exists: {
+                    passPromise = Promise.resolve(true);
+                    break;
+                }
+                case RewardCommandOptionTwitchUser.enum.follower: {
+                    passPromise = broadcaster.isFollowedBy(helixUser);
+                    break;
+                }
+                case RewardCommandOptionTwitchUser.enum.subscriber: {
+                    passPromise = broadcaster.hasSubscriber(helixUser);
+                    break;
                 }
             }
-        } else {
-            filteredUsers.push(...users);
+            passEntries.push([helixUser, passPromise]);
+        }
+
+        const passResults: boolean[] = await Promise.all(passEntries.map(([_,p]) => p));
+
+        for (let i: number = 0; i < passEntries.length; i++) {
+            if (!passResults[i]) continue;
+
+            const [helixUser] = passEntries[i];
+            filteredUsers.push({
+                username: helixUser.displayName,
+                color:    helixUserColors.get(helixUser.id) ?? null
+            });
         }
 
         return filteredUsers;

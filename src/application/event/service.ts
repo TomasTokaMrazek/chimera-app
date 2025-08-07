@@ -15,7 +15,7 @@ import {CurrentUserChannel, TipRequest} from "@chimera/streamelements/client/htt
 import * as Dto from "@chimera/streamlabs/client/socket/dto";
 
 import {ApplicationEventRepository} from "./repository";
-import {EventSyncRequestType, EventSyncService, EventSyncServiceType} from "./dto";
+import {EventSyncRequestDto, EventSyncService, EventSyncServiceType} from "./dto";
 
 @Injectable()
 export class ApplicationEventService {
@@ -29,7 +29,7 @@ export class ApplicationEventService {
         private readonly twitchRepository: TwitchRepository
     ) {}
 
-    async enable(request: EventSyncRequestType): Promise<void> {
+    async enable(request: EventSyncRequestDto): Promise<void> {
         const userView: UserView = await this.twitchRepository.getUserByAccountId(request.twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${request.twitchAccountId}' is not associated with User.`);
@@ -37,7 +37,7 @@ export class ApplicationEventService {
         await this.applicationEventRepository.create(user.id, request.sync.from, request.sync.to);
     }
 
-    async disable(request: EventSyncRequestType): Promise<void> {
+    async disable(request: EventSyncRequestDto): Promise<void> {
         const userView: UserView = await this.twitchRepository.getUserByAccountId(request.twitchAccountId);
         const user: User = userView.user ?? ((): User => {
             throw new Error(`Twitch Account '${request.twitchAccountId}' is not associated with User.`);

@@ -3,7 +3,7 @@ import {chunkArray} from "@chimera/utils/array";
 import {Injectable, Logger} from "@nestjs/common";
 import {TwitchService} from "@chimera/twitch/service";
 import {WheelService} from "@chimera/application/utils/wheel/service";
-import {z} from "zod/v4";
+import {z} from "zod";
 import {Argv, CommandModule} from "yargs";
 
 export const RewardCommandArgumentOperation = z.enum([
@@ -12,12 +12,6 @@ export const RewardCommandArgumentOperation = z.enum([
     "close"
 ]);
 export type RewardCommandArgumentOperationType = z.infer<typeof RewardCommandArgumentOperation>;
-
-export const RewardCommandOptionTarget = z.enum([
-    "wheel",
-    "pastebin"
-]);
-export type RewardCommandOptionTargetType = z.infer<typeof RewardCommandOptionTarget>;
 
 export const RewardCommandOptionTwitchUser = z.enum([
     "exists",
@@ -38,6 +32,12 @@ export const RewardCommandCreateOptions = z.object({
     cost: z.number().int()
 });
 export type RewardCommandCreateOptionsType = z.infer<typeof RewardCommandCreateOptions>;
+
+export const RewardCommandOptionTarget = z.enum([
+    "wheel",
+    "pastebin"
+]);
+export type RewardCommandOptionTargetType = z.infer<typeof RewardCommandOptionTarget>;
 
 export const RewardCommandDrawOptions = z.object({
     operation: z.literal(RewardCommandArgumentOperation.enum.draw),
