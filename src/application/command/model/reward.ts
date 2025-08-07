@@ -5,7 +5,6 @@ import {TwitchService} from "@chimera/twitch/service";
 import {WheelService} from "@chimera/application/utils/wheel/service";
 import {z} from "zod";
 import {Argv, CommandModule} from "yargs";
-import {RaffleCommandOptionTarget} from "@chimera/application/command/model/raffle";
 
 export const RewardCommandArgumentOperation = z.enum([
     "create",
@@ -45,7 +44,7 @@ export const RewardCommandDrawOptions = z.object({
     id: z.uuid(),
     twitch: RewardCommandOptionTwitch,
     unique: z.boolean().optional().default(true),
-    target: RaffleCommandOptionTarget.optional().default(RaffleCommandOptionTarget.enum.wheel)
+    target: RewardCommandOptionTarget.optional().default(RewardCommandOptionTarget.enum.wheel)
 });
 export type RewardCommandDrawOptionsType = z.infer<typeof RewardCommandDrawOptions>;
 
